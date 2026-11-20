@@ -67,6 +67,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLi
         model.expanded = true
         store.start()
         RunLoop.main.run(until: Date().addingTimeInterval(2.5))
+        model.hoveredPane = store.visibleAgents.first?.id
         let renderer = ImageRenderer(content: IslandView(store: store, model: model).frame(width: model.expandedW).fixedSize(horizontal: false, vertical: true).background(Color(white: 0.5)))
         renderer.scale = 2
         if let img = renderer.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),

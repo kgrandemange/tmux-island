@@ -9,6 +9,22 @@ final class IslandModel: ObservableObject {
     @Published var flashPane: String?
     /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
     @Published var toast: Agent?
+    /// Pane dont l'aperçu de l'écran est déplié (survol d'une ligne).
+    @Published var hoveredPane: String?
+    private var hoverWork: DispatchWorkItem?
+
+    func hover(_ id: String, inside: Bool) {
+        hoverWork?.cancel()
+        if inside {
+            let w = DispatchWorkItem { [weak self] in
+                withAnimation(.easeOut(duration: 0.2)) { self?.hoveredPane = id }
+            }
+            hoverWork = w
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: w)
+        } else if hoveredPane == id {
+            withAnimation(.easeOut(duration: 0.15)) { hoveredPane = nil }
+        }
+    }
     /// Mode concentration : plus de son, de toast ni de bannière — seuls les points d'état restent.
     @Published var focusMode = UserDefaults.standard.bool(forKey: "focusMode")
     var onToggleFocus: (() -> Void)?
@@ -155,6 +171,7 @@ final class IslandController: NSObject {
 
     func setExpanded(_ value: Bool) {
         guard model.expanded != value else { return }
+        if !value { model.hoveredPane = nil }
         if value { model.toast = nil; updateFrameForExpansion() }
         withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { model.expanded = value }
         updateFrame(animated: true)

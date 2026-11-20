@@ -31,6 +31,13 @@ private enum Screen {
         }
     }
 
+    /// Dernières lignes brutes du pane (sans les filets décoratifs), pour l'aperçu au survol.
+    static func preview(_ lines: [String]) -> [String] {
+        let noise = CharacterSet(charactersIn: "─━│┃╭╮╰╯┌┐└┘ ╌")
+        return lines.filter { l in !l.unicodeScalars.allSatisfy { noise.contains($0) } }
+            .suffix(10).map { String($0.prefix(130)) }
+    }
+
     static func meaningful(_ lines: [String]) -> [String] {
         let noise = CharacterSet(charactersIn: "─━│┃╭╮╰╯┌┐└┘ >❯|╌")
         return lines.filter { line in
@@ -174,7 +181,8 @@ final class AgentStore: ObservableObject {
             tracks[pane.id] = tr
 
             let agent = Agent(pane: pane, kind: kind, state: new, since: tr.since,
-                              message: hook?.message, tail: Screen.meaningful(tail))
+                              message: hook?.message, tail: Screen.meaningful(tail),
+                              screen: Screen.preview(tail))
             result.append(agent)
 
             if new != old, new.needsAttention, !firstPoll, !userHere { alerts.send(agent) }

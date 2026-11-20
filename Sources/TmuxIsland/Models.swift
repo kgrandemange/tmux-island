@@ -40,6 +40,8 @@ struct Agent: Identifiable, Equatable {
     var since: Date
     var message: String?
     var tail: [String]
+    /// Dernières lignes de l'écran du pane, affichées au survol.
+    var screen: [String] = []
 
     var id: String { pane.id }
 

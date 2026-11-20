@@ -272,6 +272,18 @@ struct AgentRow: View {
                 }
                 if index <= 9 { KeyCap(text: "\(index)") }
             }
+            if model.hoveredPane == agent.id, !agent.screen.isEmpty {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(Array(agent.screen.enumerated()), id: \.offset) { _, line in
+                        Text(line).font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.72)).lineLimit(1).truncationMode(.tail)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10).padding(.vertical, 8)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.06)))
+                .transition(.opacity)
+            }
             if replying {
                 TextField("Réponse rapide (↵ pour envoyer)", text: $reply)
                     .textFieldStyle(.plain).font(.system(size: 12))
@@ -294,7 +306,10 @@ struct AgentRow: View {
                     .stroke(flash ? agent.state.color : .clear, lineWidth: 1.5))
         )
         .contentShape(Rectangle())
-        .onHover { hover = $0 }
+        .onHover { inside in
+            hover = inside
+            model.hover(agent.id, inside: inside)
+        }
         .onTapGesture { model.onJump?(agent) }
     }
 }
