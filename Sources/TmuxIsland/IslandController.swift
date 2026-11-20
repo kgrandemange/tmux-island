@@ -256,7 +256,9 @@ final class IslandController: NSObject {
 
     private func notify(_ agent: Agent) {
         if model.focusMode { return }
-        NSSound(named: agent.state == .waiting ? "Funk" : "Glass")?.play()
+        if UserDefaults.standard.object(forKey: "soundsEnabled") as? Bool ?? true {
+            NSSound(named: agent.state == .waiting ? "Funk" : "Glass")?.play()
+        }
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         model.flashPane = agent.id
         // L'île est sur l'écran de la notch : si l'utilisateur travaille ailleurs, on le prévient là où il regarde.

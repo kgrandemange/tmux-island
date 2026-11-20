@@ -1,3 +1,4 @@
+import Carbon
 import XCTest
 @testable import TmuxIsland
 
@@ -208,5 +209,29 @@ final class TerminalLauncherTests: XCTestCase {
         XCTAssertEqual(TerminalLauncher.shellQuote("=abc"), "=abc")
         XCTAssertEqual(TerminalLauncher.shellQuote("it's"), "'it'\\''s'")
         XCTAssertEqual(TerminalLauncher.appleScriptEscape("a\"b\\c"), "a\\\"b\\\\c")
+    }
+}
+
+final class ShortcutTests: XCTestCase {
+    func testLabelOrdersModifiersLikeMacOS() {
+        let s = Shortcut(keyCode: 49, modifiers: UInt32(Carbon.controlKey | Carbon.optionKey))
+        XCTAssertEqual(s.label, "⌃⌥Space")
+        let all = Shortcut(keyCode: 38, modifiers: UInt32(Carbon.controlKey | Carbon.optionKey | Carbon.shiftKey | Carbon.cmdKey))
+        XCTAssertEqual(all.label, "⌃⌥⇧⌘J")
+    }
+
+    func testGlobalShortcutNeedsAModifier() {
+        XCTAssertFalse(Shortcut(keyCode: 38, modifiers: 0).isValidGlobal)
+        XCTAssertFalse(Shortcut(keyCode: 38, modifiers: UInt32(Carbon.shiftKey)).isValidGlobal)
+        XCTAssertTrue(Shortcut(keyCode: 38, modifiers: UInt32(Carbon.cmdKey)).isValidGlobal)
+    }
+
+    func testCarbonModifiersFromAppKitFlags() {
+        XCTAssertEqual(Shortcut.carbonModifiers([.control, .option]), UInt32(Carbon.controlKey | Carbon.optionKey))
+    }
+
+    func testDefaultsAreDistinct() {
+        let labels = ShortcutAction.allCases.map { $0.defaultShortcut.label }
+        XCTAssertEqual(Set(labels).count, labels.count)
     }
 }

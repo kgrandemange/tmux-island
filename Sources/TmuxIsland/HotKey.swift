@@ -5,6 +5,7 @@ import Foundation
 final class HotKeyCenter {
     static let shared = HotKeyCenter()
     private var handlers: [UInt32: () -> Void] = [:]
+    private var refs: [EventHotKeyRef] = []
     private var installed = false
     private var nextID: UInt32 = 1
 
@@ -26,5 +27,13 @@ final class HotKeyCenter {
         var ref: EventHotKeyRef?
         RegisterEventHotKey(keyCode, modifiers, EventHotKeyID(signature: OSType(0x544D5849), id: id),
                             GetApplicationEventTarget(), 0, &ref)
+        if let ref { refs.append(ref) }
+    }
+
+    /// Libère tous les raccourcis (avant de les réenregistrer après un changement de réglage).
+    func unregisterAll() {
+        for r in refs { UnregisterEventHotKey(r) }
+        refs.removeAll()
+        handlers.removeAll()
     }
 }

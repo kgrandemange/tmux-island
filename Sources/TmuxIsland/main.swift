@@ -13,6 +13,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var loginItem: NSMenuItem!
     private var followItem: NSMenuItem!
     private var focusSub: AnyCancellable?
+    private var shortcutSub: AnyCancellable?
+    private var toggleItem: NSMenuItem!
+    private var nextItem: NSMenuItem!
+    private let settings = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller = IslandController(store: store)
@@ -27,25 +31,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             controller.debugAnimTest(dir: CommandLine.arguments[i + 1])
         }
 
-        // ⌃⌥Space : ouvrir/fermer l'île — ⌃⌥J : aller directement au prochain agent à traiter
-        let mods = UInt32(controlKey | optionKey)
-        HotKeyCenter.shared.register(keyCode: UInt32(kVK_Space), modifiers: mods) { [weak self] in
-            self?.controller.toggle()
+        // Raccourcis globaux (modifiables dans les réglages) : réenregistrés à chaque changement.
+        registerHotKeys()
+        shortcutSub = ShortcutStore.shared.$shortcuts.dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.registerHotKeys() }
         }
-        HotKeyCenter.shared.register(keyCode: UInt32(kVK_ANSI_J), modifiers: mods) { [weak self] in
-            self?.controller.jumpToNextAttention()
-        }
-
-        HotKeyCenter.shared.register(keyCode: UInt32(kVK_ANSI_F), modifiers: mods) { [weak self] in
-            self?.controller.toggleFocus()
-        }
+        settings.model.onFollowScreen = { [weak self] on in self?.controller.setFollowScreen(on) }
+        settings.model.onLaunchAtLogin = { [weak self] on in self?.setLaunchAtLogin(on) }
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "TmuxIsland")
         let menu = NSMenu()
-        menu.addItem(withTitle: "Ouvrir l'île  (⌃⌥Space)", action: #selector(toggle), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Prochain agent à traiter  (⌃⌥J)", action: #selector(next), keyEquivalent: "").target = self
-        focusItem = menu.addItem(withTitle: "Mode concentration  (⌃⌥F)", action: #selector(toggleFocus), keyEquivalent: "")
+        toggleItem = menu.addItem(withTitle: "Ouvrir l'île", action: #selector(toggle), keyEquivalent: "")
+        toggleItem.target = self
+        nextItem = menu.addItem(withTitle: "Prochain agent à traiter", action: #selector(next), keyEquivalent: "")
+        nextItem.target = self
+        focusItem = menu.addItem(withTitle: "Mode concentration", action: #selector(toggleFocus), keyEquivalent: "")
         focusItem.target = self
         focusItem.state = controller.model.focusMode ? .on : .off
         focusSub = controller.model.$focusMode.sink { [weak self] on in self?.focusItem.state = on ? .on : .off }
@@ -55,6 +56,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         loginItem = menu.addItem(withTitle: "Lancer à la connexion", action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
         menu.delegate = self
+        let prefs = menu.addItem(withTitle: "Réglages…", action: #selector(openSettings), keyEquivalent: ",")
+        prefs.target = self
         menu.addItem(withTitle: "Ouvrir le dossier des états", action: #selector(openState), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quitter", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -62,7 +65,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func toggle() { controller.toggle() }
+
+    private func registerHotKeys() {
+        HotKeyCenter.shared.unregisterAll()
+        let store = ShortcutStore.shared
+        let actions: [(ShortcutAction, () -> Void)] = [
+            (.toggle, { [weak self] in self?.controller.toggle() }),
+            (.next, { [weak self] in self?.controller.jumpToNextAttention() }),
+            (.focus, { [weak self] in self?.controller.toggleFocus() }),
+        ]
+        for (action, handler) in actions {
+            let s = store.shortcut(action)
+            HotKeyCenter.shared.register(keyCode: s.keyCode, modifiers: s.modifiers, handler: handler)
+        }
+    }
+
+    @objc private func openSettings() { settings.show(followScreen: controller.followScreen) }
+
+    private func setLaunchAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Impossible de modifier le lancement à la connexion"
+            alert.informativeText = "\(error.localizedDescription)\n\nInstalle d'abord l'app avec scripts/install.sh (elle doit se trouver dans ~/Applications)."
+            alert.runModal()
+            settings.model.launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
+        let sc = ShortcutStore.shared
+        toggleItem.title = "Ouvrir l'île  (\(sc.shortcut(.toggle).label))"
+        nextItem.title = "Prochain agent à traiter  (\(sc.shortcut(.next).label))"
+        focusItem.title = "Mode concentration  (\(sc.shortcut(.focus).label))"
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
         followItem.state = controller.followScreen ? .on : .off
     }

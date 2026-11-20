@@ -59,6 +59,7 @@ private struct HeightKey: PreferenceKey {
 struct IslandView: View {
     @ObservedObject var store: AgentStore
     @ObservedObject var model: IslandModel
+    @ObservedObject private var shortcuts = ShortcutStore.shared
 
     var body: some View {
         let w = model.expanded ? model.expandedW : model.compactW
@@ -179,7 +180,7 @@ struct IslandView: View {
                     .background(Capsule().fill(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0).opacity(0.2) : Color.white.opacity(0.08)))
                 }
                 .buttonStyle(.plain)
-                Text("⌃⌥Space").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
+                Text(shortcuts.shortcut(.toggle).label).font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
             }
             .padding(.trailing, 34)
         }
