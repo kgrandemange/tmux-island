@@ -11,8 +11,8 @@
     if (n.dataset.enLabel !== undefined) n.dataset.frLabel = n.getAttribute("aria-label");
   });
   const meta = {
-    fr: { title: "TmuxIsland — La Dynamic Island de ton tmux", desc: "Sache quel agent IA a fini ou attend ta validation, et va sur le bon pane tmux en un clic. Une île autour de la notch de ton Mac, couplée à tmux." },
-    en: { title: "TmuxIsland — The Dynamic Island for your tmux", desc: "Know which AI agent finished or needs your approval, and jump to the right tmux pane in one click. An island around your Mac's notch, built on tmux." },
+    fr: { title: "TmuxIsland — La Dynamic Island de ton tmux", desc: "Plusieurs agents IA dans tmux, et tu ne sais jamais lequel a fini ? Un coup d'œil, un clic, et tu es sur le bon pane. Une Dynamic Island pour tmux, sur Mac." },
+    en: { title: "TmuxIsland — The Dynamic Island for your tmux", desc: "Several AI agents in tmux, and never sure which one is done? One glance, one click, and you're on the right pane. A Dynamic Island for tmux, on Mac." },
   };
   const buttons = [...document.querySelectorAll(".lang button")];
 

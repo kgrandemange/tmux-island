@@ -16,7 +16,19 @@
       display: flex; gap: 20px; align-items: center; padding: 0 20px; font-size: 13px; color: rgba(255, 255, 255, .88); z-index: 2; }
     #menubar b { font-weight: 700; } #menubar .sp { margin-left: auto; }
     /* L'île est agrandie pour rester lisible dans la vidéo */
-    #scene .island { transform: translateX(-50%) scale(1.3); transform-origin: top center; z-index: 5; }
+    #scene .island { transform: translateX(-50%) scale(1.3); transform-origin: top center; z-index: 5;
+      transition: width .26s cubic-bezier(.4, 0, .2, 1), height .26s cubic-bezier(.4, 0, .2, 1), border-radius .26s; }
+    #scene .island[data-state="toast"] { transition: width .42s cubic-bezier(.34, 1.3, .5, 1), height .42s cubic-bezier(.34, 1.3, .5, 1), border-radius .42s; }
+    #scene .island[data-state="expanded"] { transition: width .52s cubic-bezier(.34, 1.38, .5, 1), height .52s cubic-bezier(.34, 1.38, .5, 1), border-radius .52s; }
+    #scene .island[data-state="compact"] .l-compact { transition: opacity .15s .12s, visibility .15s .12s; }
+    #scene .l-expanded { filter: blur(6px); transform: translateY(-8px); transition: opacity .12s, filter .12s, transform .12s, visibility .12s; }
+    #scene .island[data-state="expanded"] .l-expanded { filter: none; transform: none; transition: opacity .3s .14s, filter .3s .14s, transform .3s .14s, visibility 0s .14s; }
+    /* État « en arrière-plan » : anneau bleu discret */
+    .dot.background { background: transparent; border: 1.6px solid #66a6ff; width: 7px; height: 7px; animation: ringb 1.8s ease-in-out infinite; }
+    @keyframes ringb { 50% { opacity: .4; } }
+    .row .ic.background { background: rgba(102, 166, 255, .22); }
+    .row .ic.background i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #66a6ff; animation: ringb 1.8s ease-in-out infinite; }
+    .st.background { color: #66a6ff; }
     /* Fenêtre de terminal */
     #term { position: absolute; left: 140px; right: 140px; top: 190px; bottom: 120px; border-radius: 14px; overflow: hidden;
       background: rgba(8, 10, 20, .86); border: 1px solid rgba(255, 255, 255, .16); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8); }
@@ -89,27 +101,27 @@
 
   const $ = (s) => document.querySelector(s);
   const island = $('#island'), screen = $('#screen'), cap = $('#cap'), cursor = $('#cursor'), ripple = $('#ripple');
-  const ST = { working: T('en cours', 'running'), waiting: T('en attente', 'waiting'), done: T('terminé', 'done') };
+  const ST = { working: T('en cours', 'running'), waiting: T('en attente', 'waiting'), done: T('terminé', 'done'), background: T('en arrière-plan', 'in the background') };
   const agents = {
     web:   { name: 'Claude', loc: 'web › checkout-ui', proj: 'shop-web',   state: 'working', line: '✻ Wiring the checkout form… (1m 04s)', gauge: '182k' },
     infra: { name: 'Codex',  loc: 'infra › terraform', proj: 'shop-infra', state: 'working', line: '✻ terraform apply (staging)…',        gauge: '' },
     api:   { name: 'Claude', loc: 'api › payments',    proj: 'shop-api',   state: 'working', line: '✻ Refactoring invoice totals… (1m 12s)', gauge: '640k' },
   };
-  const PRIO = { waiting: 0, done: 1, working: 2 };
-  const COLOR = { waiting: 'waiting', done: 'done', working: 'working' };
+  const PRIO = { waiting: 0, done: 1, working: 2, background: 3 };
+  const COLOR = { waiting: 'waiting', done: 'done', working: 'working', background: 'background' };
 
   /* ---------- Rendu de l'île ---------- */
   function sorted() { return Object.entries(agents).sort((a, b) => PRIO[a[1].state] - PRIO[b[1].state]); }
   function renderIsland() {
     $('#dots').innerHTML = sorted().map(([, a]) => `<i class="dot ${COLOR[a.state]}"></i>`).join('');
-    const c = { working: 0, waiting: 0, done: 0 }; Object.values(agents).forEach((a) => c[a.state]++);
-    $('#pills').innerHTML = ['working', 'waiting', 'done'].filter((k) => c[k]).map((k) => `<i class="dot ${k}" style="margin:0 4px 0 9px"></i>${c[k]}`).join('');
+    const c = { working: 0, waiting: 0, done: 0, background: 0 }; Object.values(agents).forEach((a) => c[a.state]++);
+    $('#pills').innerHTML = ['working', 'waiting', 'done', 'background'].filter((k) => c[k]).map((k) => `<i class="dot ${k}" style="margin:0 4px 0 9px${k === 'background' ? ';background:#66a6ff;border:0;animation:none;width:8px;height:8px' : ''}"></i>${c[k]}`).join('');
     $('#rows').innerHTML = sorted().map(([id, a]) => {
       const ic = a.state === 'waiting' ? '!' : a.state === 'done' ? '✓' : '<i></i>';
-      const sub = a.state === 'waiting' ? 'Claude needs your permission to use Bash' : a.state === 'done' ? (id === 'infra' ? '✔ Staging environment is up to date.' : '✔ 42 tests passed — checkout form is wired.') : a.line;
-      const gauge = a.state === 'working' && a.gauge ? `<span class="gauge"><b></b>${a.gauge}</span>` : '';
+      const sub = a.state === 'background' ? '✻ Churned for 4m 12s · 2 shells still running' : a.state === 'waiting' ? 'Claude needs your permission to use Bash' : a.state === 'done' ? (id === 'infra' ? '✔ Staging environment is up to date.' : '✔ 42 tests passed — checkout form is wired.') : a.line;
+      const gauge = (a.state === 'working' || a.state === 'background') && a.gauge ? `<span class="gauge"><b></b>${a.gauge}</span>` : '';
       const acts = a.state === 'waiting' ? `<div class="acts"><span class="p" data-act="1">1 · Yes</span><span data-act="2">2 · Yes, always</span><span data-act="3">3 · No</span></div>` : '';
-      return `<div class="row" data-row="${id}"><span class="ic ${a.state}">${ic}</span><span class="t">${a.name}<span>${a.loc}</span></span><span class="st ${a.state}">${gauge}${ST[a.state]}</span><span class="s"><i>${a.proj}</i>${sub}</span>${acts}</div>`;
+      return `<div class="row" data-row="${id}"><span class="ic ${a.state}">${ic}</span><span class="t">${a.name}<span>${a.loc}</span></span><span class="st ${a.state}">${gauge}${ST[a.state]}${a.state === 'background' && a.detail ? ' · ' + a.detail : ''}</span><span class="s"><i>${a.proj}</i>${sub}</span>${acts}</div>`;
     }).join('');
   }
   function toast(id, text) {
@@ -171,9 +183,13 @@
   at(21000, () => moveTo($('[data-row="web"] .t')));
   at(22200, () => click($('[data-row="web"] .t')));
   at(22300, () => { showTerm('web'); island.dataset.state = 'compact'; say('Chaque agent, à un clic.', 'Every agent, one click away.'); });
-  at(24800, () => { cursor.style.opacity = 0; unsay(); });
-  at(25400, () => $('#end').classList.add('show'));
-  at(29200, () => { window.__done = true; });
+  at(24000, () => { agents.api.state = 'background'; agents.api.detail = T('2 shells', '2 shells'); renderIsland();
+    say('Des shells tournent en arrière-plan ? Un anneau bleu, sans fausse alerte.', 'Shells running in the background? A blue ring, no false alert.'); });
+  at(26000, () => moveTo($('#dots'), -50, 16));
+  at(27200, () => { island.dataset.state = 'expanded'; renderIsland(); });
+  at(31600, () => { island.dataset.state = 'compact'; cursor.style.opacity = 0; unsay(); });
+  at(32400, () => $('#end').classList.add('show'));
+  at(36200, () => { window.__done = true; });
 
   function play() { steps.forEach(([ms, fn]) => setTimeout(fn, ms)); }
   showTerm('api', true); renderIsland();
