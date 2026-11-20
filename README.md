@@ -164,6 +164,20 @@ swift test                                   # 43 tests: state machine, screen, 
 .build/release/TmuxIsland --demo-images docs/assets  # renders the documentation images (fictional data)
 ```
 
+### Demo environment (for videos and screenshots)
+
+```bash
+./scripts/demo/demo.sh start    # isolated tmux server with fictional projects and interactive fake agents
+./scripts/demo/demo.sh play 10  # plays the scenario; see scripts/demo/SHOOTING.md for the shot list
+./scripts/demo/demo.sh stop     # cleans up and relaunches the real app
+```
+
+The presentation video is rendered from `docs/video.html` (a scripted scene with fictional data): open it with
+`?auto=0`, call `playVideo()`, record the page, then encode with ffmpeg.
+
+The app's `--demo-server NAME` mode only shows that tmux server, keeps history in memory and never touches your
+real files, so you can record without exposing real sessions.
+
 ## FAQ
 
 **Does it work with my terminal?** Yes, since everything goes through tmux. Bringing the right *tab* to the front is

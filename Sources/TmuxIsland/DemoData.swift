@@ -1,5 +1,18 @@
 import Foundation
 
+/// Mode démo en direct : `TmuxIsland --demo-server NOM` ne montre que le serveur tmux `tmux -L NOM`.
+/// L'historique est éphémère, les fichiers de sessions Claude et le nettoyage des hooks sont ignorés :
+/// on peut filmer l'app sans exposer ses vraies sessions ni toucher à ses vrais fichiers.
+enum DemoMode {
+    static let server: String? = {
+        let a = CommandLine.arguments
+        guard let i = a.firstIndex(of: "--demo-server"), i + 1 < a.count else { return nil }
+        return a[i + 1]
+    }()
+    static var active: Bool { server != nil }
+    static var socketPath: String? { server.map { "/private/tmp/tmux-\(getuid())/\($0)" } }
+}
+
 /// Données fictives pour la documentation et les captures (jamais utilisées en fonctionnement normal).
 enum DemoData {
     static func make(now: Date = Date()) -> (agents: [Agent], sessions: [TmuxSession], history: [HistoryEntry]) {

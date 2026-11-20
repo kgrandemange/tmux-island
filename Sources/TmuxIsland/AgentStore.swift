@@ -19,6 +19,7 @@ final class AgentStore: ObservableObject {
     @Published private(set) var sessions: [TmuxSession] = []
     @Published private(set) var tmuxRunning = true
     @Published private(set) var history: [HistoryEntry] = {
+        if DemoMode.active { return [] }
         guard let d = UserDefaults.standard.data(forKey: "history"),
               let h = try? JSONDecoder().decode([HistoryEntry].self, from: d) else { return [] }
         return h
@@ -104,7 +105,7 @@ final class AgentStore: ObservableObject {
         guard !snap.panes.isEmpty else { return snap }
         let ps = ProcessTable()
         snap.hooks = HookStore.readAll(validPanes: Set(snap.panes.map(\.id)))
-        snap.claude = ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
+        snap.claude = DemoMode.active ? [:] : ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
         for pane in snap.panes {
             if let k = ps.agentKind(under: pane.pid) { snap.kinds[pane.id] = k }
             else if snap.claude[pane.claudeKey] != nil { snap.kinds[pane.id] = "claude" }
@@ -200,7 +201,7 @@ final class AgentStore: ObservableObject {
                              windowName: a.pane.windowName, project: a.pane.project, agentName: a.displayName,
                              waiting: a.state == .waiting, date: Date())
         history = Array(([e] + history).prefix(30))
-        if let d = try? JSONEncoder().encode(history) { UserDefaults.standard.set(d, forKey: "history") }
+        if !DemoMode.active, let d = try? JSONEncoder().encode(history) { UserDefaults.standard.set(d, forKey: "history") }
     }
 
     /// Pane actuel correspondant à une entrée (même pane, sinon la fenêtre) ; nil si la session n'existe plus.

@@ -94,6 +94,7 @@ enum TmuxService {
 
     /// Serveur par défaut + tous les sockets présents dans le dossier de tmux (`tmux -L nom`, `-S chemin`…).
     static func discoverServers() -> [String?] {
+        if let demo = DemoMode.socketPath { return [demo] }
         var servers: [String?] = [nil]
         let uid = getuid()
         var roots = ["/private/tmp/tmux-\(uid)", "/tmp/tmux-\(uid)"]
@@ -173,7 +174,7 @@ enum HookStore {
             let id: String
             if let r = stem.range(of: "__") { id = "\(stem[..<r.lowerBound]):%\(stem[r.upperBound...])" } else { id = "%" + stem }
             guard validPanes.contains(id) else {
-                if !validPanes.isEmpty { try? FileManager.default.removeItem(at: url) }
+                if !validPanes.isEmpty, !DemoMode.active { try? FileManager.default.removeItem(at: url) }
                 continue
             }
             if let data = try? Data(contentsOf: url), let ev = try? JSONDecoder().decode(HookEvent.self, from: data) {

@@ -116,7 +116,7 @@ struct TmuxSession: Identifiable {
     var windows: [TmuxWindow]
     var id: String { "\(server ?? "")|\(name)" }
     /// Les sessions d'un serveur tmux secondaire (`tmux -L nom`) sont suffixées par le nom du socket.
-    var displayName: String { server.map { "\(name) (\(($0 as NSString).lastPathComponent))" } ?? name }
+    var displayName: String { DemoMode.active ? name : server.map { "\(name) (\(($0 as NSString).lastPathComponent))" } ?? name }
 }
 
 struct TmuxClient {
