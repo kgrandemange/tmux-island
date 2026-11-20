@@ -34,6 +34,7 @@ final class IslandController: NSObject {
     let store: AgentStore
     let model = IslandModel()
     private var panel: IslandPanel!
+    private let banner = BannerController()
     private var screen: NSScreen = NSScreen.main ?? NSScreen.screens[0]
     private var bag = Set<AnyCancellable>()
     private var pinned = false
@@ -46,6 +47,7 @@ final class IslandController: NSObject {
         self.store = store
         super.init()
         refreshGeometry()
+        banner.onJump = { [weak self] agent in self?.jump(to: agent) }
         buildPanel()
         bind()
         installMouseMonitors()
@@ -163,6 +165,11 @@ final class IslandController: NSObject {
         NSSound(named: agent.state == .waiting ? "Funk" : "Glass")?.play()
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         model.flashPane = agent.id
+        // L'île est sur l'écran de la notch : si l'utilisateur travaille ailleurs, on le prévient là où il regarde.
+        let loc = NSEvent.mouseLocation
+        if let current = NSScreen.screens.first(where: { NSMouseInRect(loc, $0.frame, false) }), current != screen {
+            banner.show(agent, on: current)
+        }
         setExpanded(true)
         collapseWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
