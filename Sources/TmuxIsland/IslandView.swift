@@ -73,7 +73,31 @@ struct IslandView: View {
 
     // MARK: Compact
 
-    private var compact: some View {
+    @ViewBuilder private var compact: some View {
+        if let t = model.toast { toastView(t) } else { idleCompact }
+    }
+
+    private func toastView(_ t: Agent) -> some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Text(t.pane.project).font(.system(size: 11, weight: .semibold)).lineLimit(1)
+                AgentDot(state: t.state)
+            }
+            .frame(width: model.toastWing - 8, alignment: .trailing)
+            .padding(.trailing, 8)
+            Spacer(minLength: 0).frame(width: model.notchW - 12)
+            Text(t.state == .waiting ? "attend" : "terminé")
+                .font(.system(size: 11, weight: .semibold)).foregroundStyle(t.state.color)
+                .frame(width: model.toastWing - 8, alignment: .leading)
+                .padding(.leading, 8)
+        }
+        .frame(height: model.notchH)
+        .contentShape(Rectangle())
+        .onTapGesture { model.onTapCompact?() }
+        .transition(.opacity)
+    }
+
+    private var idleCompact: some View {
         HStack(spacing: 0) {
             // Aile gauche : présence de tmux (toujours visible) + nombre de sessions
             HStack(spacing: 5) {
@@ -104,6 +128,8 @@ struct IslandView: View {
             .padding(.leading, 6)
         }
         .frame(height: model.notchH)
+        .contentShape(Rectangle())
+        .onTapGesture { model.onTapCompact?() }
     }
 
     // MARK: Étendue

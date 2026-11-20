@@ -7,15 +7,19 @@ final class IslandModel: ObservableObject {
     @Published var expanded = false
     @Published var contentHeight: CGFloat = 0
     @Published var flashPane: String?
+    /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
+    @Published var toast: Agent?
     var notchW: CGFloat = 190
     var notchH: CGFloat = 32
     var hasActivity = false
     let wing: CGFloat = 74
     let expandedW: CGFloat = 560
-    var compactW: CGFloat { notchW + 2 * wing }
+    var compactW: CGFloat { notchW + 2 * (toast == nil ? wing : toastWing) }
+    let toastWing: CGFloat = 150
     var requestKey: (() -> Void)?
     var onJump: ((Agent) -> Void)?
     var onJumpPane: ((Pane) -> Void)?
+    var onTapCompact: (() -> Void)?
 }
 
 final class IslandPanel: NSPanel {
@@ -88,6 +92,10 @@ final class IslandController: NSObject {
         host.sizingOptions = []
         panel.contentView = host
         model.requestKey = { [weak self] in self?.panel.makeKey() }
+        model.onTapCompact = { [weak self] in
+            guard let self else { return }
+            if let t = self.model.toast { self.jump(to: t) } else { self.toggle() }
+        }
         NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: panel,
                                                queue: .main) { [weak self] _ in
             Task { @MainActor in
@@ -128,6 +136,10 @@ final class IslandController: NSObject {
             self.updateFrame(animated: true)
         }.store(in: &bag)
 
+        model.$toast.sink { [weak self] _ in
+            DispatchQueue.main.async { self?.updateFrame(animated: true) }
+        }.store(in: &bag)
+
         model.$contentHeight.removeDuplicates().sink { [weak self] _ in
             DispatchQueue.main.async { self?.updateFrame(animated: true) }
         }.store(in: &bag)
@@ -139,7 +151,7 @@ final class IslandController: NSObject {
 
     func setExpanded(_ value: Bool) {
         guard model.expanded != value else { return }
-        if value { updateFrameForExpansion() }
+        if value { model.toast = nil; updateFrameForExpansion() }
         withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { model.expanded = value }
         updateFrame(animated: true)
     }
@@ -170,15 +182,24 @@ final class IslandController: NSObject {
         if let current = NSScreen.screens.first(where: { NSMouseInRect(loc, $0.frame, false) }), current != screen {
             banner.show(agent, on: current)
         }
-        setExpanded(true)
+        // Toast dans l'île compacte (cliquable) ; si l'île est déjà dépliée, la ligne clignote simplement.
+        if !model.expanded {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { model.toast = agent }
+            updateFrameForToast()
+        }
         collapseWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.model.flashPane = nil
-            if !self.hovering && !self.pinned { self.setExpanded(false) }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { self.model.toast = nil }
         }
         collapseWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: work)
+    }
+
+    private func updateFrameForToast() {
+        let w = model.compactW, h = model.notchH
+        panel.setFrame(NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h), display: true)
     }
 
     func jump(to agent: Agent) {
