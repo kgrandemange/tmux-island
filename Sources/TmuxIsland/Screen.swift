@@ -13,6 +13,32 @@ enum Screen {
         }
     }
 
+    /// Menu de validation actuellement affiché en bas de l'écran : lignes « 1. Yes », « 2. … », « 3. No… ».
+    /// Ignore les listes numérotées de la conversation (le menu doit se terminer dans les dernières lignes).
+    static func pendingOptions(_ lines: [String]) -> [PermissionOption] {
+        let box = CharacterSet(charactersIn: " │┃╎")
+        let pattern = try! NSRegularExpression(pattern: #"^([❯>›])?\s*(\d{1,2})[.)]\s+(\S.*)$"#)
+        var block: [PermissionOption] = []
+        var blockEnd = -1
+        var best: (options: [PermissionOption], end: Int)?
+        for (i, raw) in lines.enumerated() {
+            let t = raw.trimmingCharacters(in: box)
+            let range = NSRange(t.startIndex..., in: t)
+            guard let m = pattern.firstMatch(in: t, range: range),
+                  let numRange = Range(m.range(at: 2), in: t), let n = Int(t[numRange]),
+                  let labelRange = Range(m.range(at: 3), in: t) else { continue }
+            let selected = m.range(at: 1).location != NSNotFound
+            let label = t[labelRange].trimmingCharacters(in: box)
+            if n == 1 { block = []; blockEnd = i }
+            guard n == block.count + 1 else { continue }
+            block.append(PermissionOption(number: n, label: label, selected: selected))
+            blockEnd = i
+            if block.count >= 2 { best = (block, blockEnd) }
+        }
+        guard let best, best.end >= lines.count - 6 else { return [] }
+        return best.options
+    }
+
     /// Claude affiche « Interrupted » après un Esc : ce n'est pas une fin de tâche à signaler.
     static func isInterrupted(_ lines: [String]) -> Bool {
         lines.suffix(12).contains { $0.contains("Interrupted") }

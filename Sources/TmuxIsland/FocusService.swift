@@ -27,6 +27,19 @@ enum FocusService {
         DispatchQueue.global().async { TmuxService.sendKeys(pane, keys: ["Enter"]) }
     }
 
+    /// Choisit une option du menu de validation. Selon la version de l'agent, le chiffre valide tout de suite
+    /// ou ne fait que déplacer la sélection : si le menu est toujours affiché juste après, on valide avec Entrée.
+    static func choose(_ option: PermissionOption, on pane: Pane) {
+        DispatchQueue.global().async { chooseSync(option, on: pane) }
+    }
+
+    static func chooseSync(_ option: PermissionOption, on pane: Pane, settle: TimeInterval = 0.45) {
+        TmuxService.sendKeys(pane, literal: String(option.number))
+        Thread.sleep(forTimeInterval: settle)
+        let stillOpen = Screen.pendingOptions(TmuxService.capture(pane)).contains { $0.number == option.number && $0.selected }
+        if stillOpen { TmuxService.sendKeys(pane, keys: ["Enter"]) }
+    }
+
     static func reply(to pane: Pane, text: String) {
         DispatchQueue.global().async {
             TmuxService.sendKeys(pane, literal: text)

@@ -235,3 +235,105 @@ final class ShortcutTests: XCTestCase {
         XCTAssertEqual(Set(labels).count, labels.count)
     }
 }
+
+final class PermissionOptionsTests: XCTestCase {
+    func testParsesBoxedClaudeDialog() {
+        let screen = [
+            "● Bash(rm -rf build)",
+            "╭──────────────────────────────────────────────╮",
+            "│ Bash command                                 │",
+            "│   rm -rf build                               │",
+            "│ Do you want to proceed?                      │",
+            "│ ❯ 1. Yes                                     │",
+            "│   2. Yes, and don't ask again for rm commands│",
+            "│   3. No, and tell Claude what to do differently (esc)│",
+            "╰──────────────────────────────────────────────╯",
+        ]
+        let o = Screen.pendingOptions(screen)
+        XCTAssertEqual(o.map(\.number), [1, 2, 3])
+        XCTAssertEqual(o.map(\.shortLabel), ["Yes", "Yes, always", "No"])
+        XCTAssertEqual(o.map(\.selected), [true, false, false])
+    }
+
+    func testParsesPlainDialog() {
+        let o = Screen.pendingOptions(["Do you want to proceed?", "❯ 1. Yes", "  2. No"])
+        XCTAssertEqual(o.map(\.label), ["Yes", "No"])
+    }
+
+    func testIgnoresNumberedListInTheConversation() {
+        var screen = ["Voici les étapes :", "1. Installer", "2. Configurer", "3. Lancer"]
+        screen += Array(repeating: "texte qui suit", count: 10)
+        XCTAssertTrue(Screen.pendingOptions(screen).isEmpty)
+    }
+
+    func testUsesTheLastBlockWhenSeveralListsAreOnScreen() {
+        let screen = ["1. a", "2. b", "texte", "Do you want to?", "❯ 1. Yes", "  2. No"]
+        XCTAssertEqual(Screen.pendingOptions(screen).map(\.label), ["Yes", "No"])
+    }
+
+    func testSingleNumberedLineIsNotAMenu() {
+        XCTAssertTrue(Screen.pendingOptions(["1. seul"]).isEmpty)
+    }
+
+    func testSelectionMarkerMoves() {
+        let o = Screen.pendingOptions(["Do you want to proceed?", "  1. Yes", "❯ 2. No"])
+        XCTAssertEqual(o.map(\.selected), [false, true])
+    }
+}
+
+/// Envoie de vraies touches dans un serveur tmux privé (ignoré si tmux est absent).
+final class ChooseOptionIntegrationTests: XCTestCase {
+    private var sock = ""
+
+    override func setUpWithError() throws {
+        try XCTSkipUnless(FileManager.default.isExecutableFile(atPath: TmuxService.path), "tmux absent")
+        sock = NSTemporaryDirectory() + "island-test-\(UUID().uuidString.prefix(8)).sock"
+    }
+
+    override func tearDown() {
+        if !sock.isEmpty { TmuxService.run(["kill-server"], server: sock) }
+    }
+
+    private func startMenu(script: String) -> Pane {
+        TmuxService.run(["new-session", "-d", "-s", "t", "-x", "100", "-y", "30", "bash", "-c", script], server: sock)
+        let id = TmuxService.run(["list-panes", "-a", "-F", "#{pane_id}"], server: sock).out.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Pane(id: "t:\(id)", tmuxID: id, server: sock, session: "t", windowIndex: 0, windowName: "w", paneIndex: 0,
+                    path: "/", pid: 0, paneActive: true, windowActive: true, sessionAttached: false)
+    }
+
+    private func waitForMenu(_ pane: Pane) throws -> [PermissionOption] {
+        for _ in 0..<40 {
+            let o = Screen.pendingOptions(TmuxService.capture(pane))
+            if !o.isEmpty { return o }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        throw XCTSkip("le menu de test ne s'est pas affiché")
+    }
+
+    /// Variante 1 : le chiffre valide immédiatement.
+    func testDigitThatConfirmsImmediately() throws {
+        let pane = startMenu(script: #"printf 'Do you want to proceed?\n❯ 1. Yes\n  2. No\n'; read -rsn1 k; echo "GOT:$k"; sleep 30"#)
+        let options = try waitForMenu(pane)
+        FocusService.chooseSync(options[1], on: pane, settle: 0.4)
+        Thread.sleep(forTimeInterval: 0.3)
+        let screen = TmuxService.capture(pane).joined(separator: "\n")
+        XCTAssertTrue(screen.contains("GOT:2"), screen)
+    }
+
+    /// Variante 2 : le chiffre ne fait que déplacer la sélection, Entrée valide.
+    func testDigitThatOnlyMovesTheSelectionNeedsEnter() throws {
+        let script = #"""
+        sel=1
+        draw() { clear; printf 'Do you want to proceed?\n'; [ $sel = 1 ] && printf '❯ 1. Yes\n' || printf '  1. Yes\n'; [ $sel = 2 ] && printf '❯ 2. No\n' || printf '  2. No\n'; }
+        draw
+        while true; do read -rsn1 k; if [ -z "$k" ]; then echo "FINAL:$sel"; break; fi; sel=$k; draw; done
+        sleep 30
+        """#
+        let pane = startMenu(script: script)
+        let options = try waitForMenu(pane)
+        FocusService.chooseSync(options[1], on: pane, settle: 0.5)
+        Thread.sleep(forTimeInterval: 0.3)
+        let screen = TmuxService.capture(pane).joined(separator: "\n")
+        XCTAssertTrue(screen.contains("FINAL:2"), screen)
+    }
+}

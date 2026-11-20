@@ -295,7 +295,7 @@ struct AgentRow: View {
                         Text(agent.preview).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
-                if agent.state == .waiting {
+                if agent.state == .waiting && agent.options.isEmpty {
                     ActionButton(title: "↵ Valider") { FocusService.sendEnter(to: agent.pane) }
                 }
                 if agent.state.needsAttention {
@@ -305,6 +305,18 @@ struct AgentRow: View {
                     }
                 }
                 if index <= 9 { KeyCap(text: "\(index)") }
+            }
+            if agent.state == .waiting && !agent.options.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(agent.options.prefix(4)) { o in
+                        ActionButton(title: "\(o.number) · \(o.shortLabel)", prominent: o.selected) {
+                            FocusService.choose(o, on: agent.pane)
+                        }
+                        .help(o.label)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, 8)
             }
             if !agent.screen.isEmpty {
                 Reveal(open: model.hoveredPane == agent.id) {
@@ -562,12 +574,13 @@ struct Pill: View {
 
 struct ActionButton: View {
     let title: String
+    var prominent = false
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Text(title).font(.system(size: 10, weight: .semibold))
                 .padding(.horizontal, 8).padding(.vertical, 4)
-                .background(Capsule().fill(Color.white.opacity(0.16)))
+                .background(Capsule().fill(prominent ? AgentState.done.color.opacity(0.4) : Color.white.opacity(0.16)))
         }
         .buttonStyle(.plain)
     }

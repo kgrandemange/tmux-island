@@ -150,7 +150,8 @@ final class AgentStore: ObservableObject {
 
             let agent = Agent(pane: pane, kind: kind, state: new, since: tr.since,
                               message: hook?.message, tail: Screen.meaningful(tail),
-                              screen: Screen.preview(tail), usage: snap.usage[pane.id])
+                              screen: Screen.preview(tail), usage: snap.usage[pane.id],
+                              options: new == .waiting ? Screen.pendingOptions(tail) : [])
             result.append(agent)
 
             if new != old.state, new.needsAttention, !firstPoll {

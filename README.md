@@ -16,6 +16,9 @@ sur le tty ; autres terminaux : activation de l'app).
 - **Réglages** (menu › « Réglages… », `⌘,`) : les trois raccourcis globaux sont modifiables (clique, puis appuie sur la
   combinaison ; refus si elle est déjà prise ou sans ⌃/⌥/⌘), plus suivi d'écran, sons et lancement à la connexion.
 - **`⌃⌥J` global** (par défaut) : saute directement au prochain agent terminé / en attente (file d'attente, le plus ancien d'abord).
+- **Choix de validation** : pour un agent en attente, les vraies options du menu lues à l'écran (« 1 · Yes »,
+  « 2 · Yes, always », « 3 · No »…) sont proposées en boutons. Après le chiffre, si le menu est toujours affiché,
+  Entrée est envoyé (couvre les deux comportements possibles). Sans menu détecté : « ↵ Valider ».
 - **Valider (↵)** une demande de permission et **répondre** depuis l'île sans changer de fenêtre (`tmux send-keys`).
 - **Auto-acquittement** : un « terminé » disparaît quand tu regardes déjà le pane.
 - **Suivre l'écran actif** (menu, désactivé par défaut) : l'île se pose sur l'écran où se trouve le curseur

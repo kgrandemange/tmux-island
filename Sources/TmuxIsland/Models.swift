@@ -36,6 +36,23 @@ struct Pane: Identifiable, Hashable {
     var claudeKey: String { "\(session)|\(tmuxID)" }
 }
 
+/// Un choix proposé par un menu de validation (« 1. Yes », « 2. Yes, and don't ask again… », « 3. No »).
+struct PermissionOption: Equatable, Identifiable {
+    let number: Int
+    let label: String
+    let selected: Bool
+    var id: Int { number }
+
+    var shortLabel: String {
+        let lower = label.lowercased()
+        if lower.hasPrefix("yes") {
+            return lower.contains("don't ask again") || lower.contains("always") || lower.contains("allow all") ? "Yes, always" : "Yes"
+        }
+        if lower.hasPrefix("no") { return "No" }
+        return label.count > 22 ? String(label.prefix(21)) + "…" : label
+    }
+}
+
 struct Agent: Identifiable, Equatable {
     var pane: Pane
     var kind: String
@@ -47,6 +64,8 @@ struct Agent: Identifiable, Equatable {
     var screen: [String] = []
     /// Contexte de la session Claude Code (nil pour les autres agents ou si introuvable).
     var usage: ClaudeUsage.Info?
+    /// Choix du menu de validation affiché à l'écran (vide si aucun menu n'est en attente).
+    var options: [PermissionOption] = []
 
     var id: String { pane.id }
 
