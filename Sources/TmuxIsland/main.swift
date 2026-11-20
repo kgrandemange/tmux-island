@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var focusItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var followItem: NSMenuItem!
     private var focusSub: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -49,6 +50,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         focusItem.state = controller.model.focusMode ? .on : .off
         focusSub = controller.model.$focusMode.sink { [weak self] on in self?.focusItem.state = on ? .on : .off }
         menu.addItem(.separator())
+        followItem = menu.addItem(withTitle: "Suivre l'écran actif", action: #selector(toggleFollowScreen), keyEquivalent: "")
+        followItem.target = self
         loginItem = menu.addItem(withTitle: "Lancer à la connexion", action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
         menu.delegate = self
@@ -61,7 +64,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggle() { controller.toggle() }
     func menuNeedsUpdate(_ menu: NSMenu) {
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        followItem.state = controller.followScreen ? .on : .off
     }
+
+    @objc private func toggleFollowScreen() { controller.setFollowScreen(!controller.followScreen) }
 
     @objc private func toggleLogin() {
         do {

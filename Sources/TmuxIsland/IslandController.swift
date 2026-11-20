@@ -100,8 +100,29 @@ final class IslandController: NSObject {
 
     // MARK: - Géométrie
 
+    /// Option « suivre l'écran actif » : l'île se pose sur l'écran où se trouve le curseur.
+    private(set) var followScreen = UserDefaults.standard.bool(forKey: "followActiveScreen")
+    private var moveWork: DispatchWorkItem?
+
+    func setFollowScreen(_ on: Bool) {
+        followScreen = on
+        UserDefaults.standard.set(on, forKey: "followActiveScreen")
+        refreshGeometry()
+        updateFrame(animated: false)
+    }
+
+    private func screenUnderMouse() -> NSScreen? {
+        NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }
+    }
+
     private func refreshGeometry() {
-        screen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main ?? NSScreen.screens[0]
+        let notchScreen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main ?? NSScreen.screens[0]
+        apply(screen: followScreen ? (screenUnderMouse() ?? notchScreen) : notchScreen)
+    }
+
+    private func apply(screen newScreen: NSScreen) {
+        screen = newScreen
+        model.objectWillChange.send()
         if screen.safeAreaInsets.top > 0 {
             model.notchH = screen.safeAreaInsets.top
             let l = screen.auxiliaryTopLeftArea?.width ?? 0
@@ -239,9 +260,13 @@ final class IslandController: NSObject {
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         model.flashPane = agent.id
         // L'île est sur l'écran de la notch : si l'utilisateur travaille ailleurs, on le prévient là où il regarde.
-        let loc = NSEvent.mouseLocation
-        if let current = NSScreen.screens.first(where: { NSMouseInRect(loc, $0.frame, false) }), current != screen {
-            banner.show(agent, on: current)
+        if let current = screenUnderMouse(), current != screen {
+            if followScreen {
+                apply(screen: current)
+                updateFrame(animated: false)
+            } else {
+                banner.show(agent, on: current)
+            }
         }
         // Toast dans l'île compacte (cliquable) ; si l'île est déjà dépliée, la ligne clignote simplement.
         if !model.expanded {
@@ -278,6 +303,24 @@ final class IslandController: NSObject {
 
     private func mouseMoved() {
         let loc = NSEvent.mouseLocation
+        // Mode « suivre l'écran actif » : après un court délai sur un autre écran, l'île vient s'y poser.
+        if followScreen, !model.expanded, model.toast == nil, let cur = screenUnderMouse(), cur != screen {
+            if moveWork == nil {
+                let w = DispatchWorkItem { [weak self] in
+                    guard let self else { return }
+                    self.moveWork = nil
+                    if let cur = self.screenUnderMouse(), cur != self.screen, !self.model.expanded {
+                        self.apply(screen: cur)
+                        self.updateFrame(animated: false)
+                    }
+                }
+                moveWork = w
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: w)
+            }
+        } else {
+            moveWork?.cancel()
+            moveWork = nil
+        }
         var area = visibleRect()
         if !model.expanded {
             // Île compacte : zone de survol un peu élargie (côtés et bord haut de l'écran).
