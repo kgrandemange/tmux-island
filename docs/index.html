@@ -203,9 +203,11 @@
         <h3 class="inst-h" data-en="With Homebrew">Avec Homebrew</h3>
         <div class="card codebox reveal">
           <div class="copy"><button type="button" data-en="Copy">Copier</button></div>
-<pre><span class="k">$</span> brew install --cask kgrandemange/tap/tmuxisland</pre>
+<pre><span class="k">$</span> brew tap kgrandemange/tap
+<span class="k">$</span> brew trust --tap kgrandemange/tap
+<span class="k">$</span> brew install --cask tmuxisland</pre>
         </div>
-        <p class="inst-note" data-en="Homebrew checks the download's SHA-256 and takes care of the first-launch prompt. Update with <code>brew upgrade --cask tmuxisland</code>.">Homebrew vérifie l'empreinte SHA-256 du téléchargement et s'occupe de l'avertissement du premier lancement. Mise à jour avec <code>brew upgrade --cask tmuxisland</code>.</p>
+        <p class="inst-note" data-en="Homebrew asks you to trust third-party taps (once): the second command does it. Then Homebrew checks the download's SHA-256 and takes care of the first-launch prompt. Update with <code>brew upgrade --cask tmuxisland</code>.">Homebrew demande d'approuver les taps tiers (une seule fois) : la deuxième commande s'en charge. Ensuite Homebrew vérifie l'empreinte SHA-256 du téléchargement et s'occupe de l'avertissement du premier lancement. Mise à jour avec <code>brew upgrade --cask tmuxisland</code>.</p>
       </div>
       <div>
         <h3 class="inst-h" data-en="Manual download">Téléchargement manuel</h3>

@@ -85,10 +85,12 @@ Requirements: **macOS 14 or later on Apple Silicon (M1 or newer)**, tmux 3.x. In
 ### Homebrew (recommended)
 
 ```bash
-brew install --cask kgrandemange/tap/tmuxisland
+brew tap kgrandemange/tap
+brew trust --tap kgrandemange/tap      # Homebrew asks you to trust third-party taps (once)
+brew install --cask tmuxisland
 ```
 
-Homebrew verifies the SHA-256 of the download and removes the quarantine flag, so there is no first-launch prompt.
+Homebrew verifies the SHA-256 of the download and the cask removes the quarantine flag, so there is no first-launch prompt.
 Update with `brew upgrade --cask tmuxisland`.
 
 ### Manual download
