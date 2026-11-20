@@ -163,8 +163,10 @@ The same panel controls screen following, sounds and launch at login.
 
 In order of reliability:
 
-1. **Official session status** (Claude Code): `~/.claude/sessions/<pid>.json` provides `busy` / `idle` and links the
-   session to its tmux pane. No setup needed.
+1. **Official session status** (Claude Code): `~/.claude/sessions/<pid>.json` provides `busy` / `idle` / `shell` and links the
+   session to its tmux pane. No setup needed. `shell` means the turn is over but background shells or sub-agents are still
+   running: the island shows a calm blue ring ("in the background", with the count read from the screen) instead of
+   "running", and raises no "done" alert until the agent really finishes.
 2. **Hooks** (if installed): `UserPromptSubmit`, `Notification`, `Stop`…
 3. **The pane's screen**: `esc to interrupt` (running), `Do you want to…` (waiting), `Interrupted` (interrupted: no
    alert). This is also how Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent or Goose are tracked.

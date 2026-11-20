@@ -337,3 +337,56 @@ final class ChooseOptionIntegrationTests: XCTestCase {
         XCTAssertTrue(screen.contains("FINAL:2"), screen)
     }
 }
+
+final class BackgroundStateTests: XCTestCase {
+    private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+
+    private func resolve(_ old: Track = Track(state: .idle, since: Date(timeIntervalSince1970: 0)),
+                         _ configure: (inout Signals) -> Void) -> Track {
+        var s = Signals(now: t0)
+        configure(&s)
+        return StateResolver.resolve(old: old, signals: s)
+    }
+
+    func testShellStatusMeansBackground() {
+        XCTAssertEqual(resolve { $0.sessionStatus = "shell" }.state, .background)
+    }
+
+    func testWorkingThenShellIsNotReportedAsDone() {
+        let working = resolve { $0.sessionStatus = "busy" }
+        let bg = resolve(working) { $0.sessionStatus = "shell" }
+        XCTAssertEqual(bg.state, .background)
+        XCTAssertFalse(bg.state.needsAttention, "aucune alerte quand l'agent passe en arrière-plan")
+    }
+
+    func testBackgroundThenIdleIsQuiet() {
+        let bg = resolve { $0.sessionStatus = "shell" }
+        XCTAssertEqual(resolve(bg) { $0.sessionStatus = "idle" }.state, .idle)
+    }
+
+    func testAgentThatWakesUpAndFinishesIsReported() {
+        let bg = resolve { $0.sessionStatus = "shell" }
+        let working = resolve(bg) { $0.sessionStatus = "busy" }
+        XCTAssertEqual(working.state, .working)
+        XCTAssertEqual(resolve(working) { $0.sessionStatus = "idle" }.state, .done)
+    }
+
+    func testPermissionPromptBeatsBackground() {
+        XCTAssertEqual(resolve { $0.sessionStatus = "shell"; $0.screenWaiting = true }.state, .waiting)
+    }
+
+    func testBackgroundHasLowerPriorityThanWorkingButIsVisible() {
+        XCTAssertGreaterThan(AgentState.background.priority, AgentState.working.priority)
+        XCTAssertLessThan(AgentState.background.priority, AgentState.idle.priority)
+    }
+
+    func testBackgroundSummaryFromFooter() {
+        XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ bypass permissions on · 3 background tasks · ← 1 agent · ↓ to manage"]), "3 tâches de fond")
+        XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ 1 background task · ↓ to manage"]), "1 tâche de fond")
+    }
+
+    func testBackgroundSummaryFromTurnEndLine() {
+        XCTAssertEqual(Screen.backgroundSummary(["✻ Churned for 10m 53s · done 9:09 PM · 2 shells still running"]), "2 shells")
+        XCTAssertNil(Screen.backgroundSummary(["rien de spécial", "❯ "]))
+    }
+}

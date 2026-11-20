@@ -36,6 +36,10 @@ enum StateResolver {
                 new = .waiting
             } else if ["busy", "running", "working"].contains(status) {
                 new = .working
+            } else if status == "shell" || status.contains("background") {
+                // Tour fini, mais des shells / sous-agents tournent encore : ni « en cours », ni « terminé »
+                // (pas d'alerte). L'alerte viendra si l'agent se réveille, travaille puis termine.
+                new = .background
             } else if s.screenInterrupted {
                 // L'utilisateur a interrompu l'agent (Esc) : rien à signaler.
                 new = .idle

@@ -1,7 +1,9 @@
 import Foundation
 
 enum AgentState: String {
-    case waiting, done, working, idle
+    /// `background` : le tour de l'agent est fini mais des shells / sous-agents tournent encore en arrière-plan
+    /// (statut `shell` de Claude Code). L'agent peut se réveiller ; ce n'est ni « en cours » ni « terminé ».
+    case waiting, done, working, background, idle
 
     /// Plus petit = plus urgent.
     var priority: Int {
@@ -9,7 +11,8 @@ enum AgentState: String {
         case .waiting: return 0
         case .done: return 1
         case .working: return 2
-        case .idle: return 3
+        case .background: return 3
+        case .idle: return 4
         }
     }
 
@@ -66,6 +69,8 @@ struct Agent: Identifiable, Equatable {
     var usage: ClaudeUsage.Info?
     /// Choix du menu de validation affiché à l'écran (vide si aucun menu n'est en attente).
     var options: [PermissionOption] = []
+    /// Précision d'état lue à l'écran (ex. « 2 shells », « 3 tâches de fond » pour l'état `background`).
+    var detail: String?
 
     var id: String { pane.id }
 

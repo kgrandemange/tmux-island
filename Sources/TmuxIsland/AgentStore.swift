@@ -48,6 +48,7 @@ final class AgentStore: ObservableObject {
     var workingCount: Int { agents.filter { $0.state == .working }.count }
     var waitingCount: Int { agents.filter { $0.state == .waiting }.count }
     var doneCount: Int { agents.filter { $0.state == .done }.count }
+    var backgroundCount: Int { agents.filter { $0.state == .background }.count }
 
     func start() {
         poll()
@@ -152,7 +153,8 @@ final class AgentStore: ObservableObject {
             let agent = Agent(pane: pane, kind: kind, state: new, since: tr.since,
                               message: hook?.message, tail: Screen.meaningful(tail),
                               screen: Screen.preview(tail), usage: snap.usage[pane.id],
-                              options: new == .waiting ? Screen.pendingOptions(tail) : [])
+                              options: new == .waiting ? Screen.pendingOptions(tail) : [],
+                              detail: new == .background ? Screen.backgroundSummary(tail) : nil)
             result.append(agent)
 
             if new != old.state, new.needsAttention, !firstPoll {

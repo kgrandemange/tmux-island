@@ -39,6 +39,26 @@ enum Screen {
         return best.options
     }
 
+    /// Shells / sous-agents encore actifs en arrière-plan, lus dans le pied de page de Claude Code
+    /// (« 3 background tasks ») ou la ligne de fin de tour (« 2 shells still running »).
+    static func backgroundSummary(_ lines: [String]) -> String? {
+        let recent = lines.suffix(10)
+        for line in recent.reversed() {
+            if let n = number(in: line, before: "background tasks?") { return n == 1 ? "1 tâche de fond" : "\(n) tâches de fond" }
+        }
+        for line in recent.reversed() {
+            if let n = number(in: line, before: "shells? still running") { return n == 1 ? "1 shell" : "\(n) shells" }
+        }
+        return nil
+    }
+
+    private static func number(in text: String, before pattern: String) -> Int? {
+        guard let re = try? NSRegularExpression(pattern: #"(\d+)\s+"# + pattern, options: .caseInsensitive),
+              let m = re.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let r = Range(m.range(at: 1), in: text) else { return nil }
+        return Int(text[r])
+    }
+
     /// Claude affiche « Interrupted » après un Esc : ce n'est pas une fin de tâche à signaler.
     static func isInterrupted(_ lines: [String]) -> Bool {
         lines.suffix(12).contains { $0.contains("Interrupted") }

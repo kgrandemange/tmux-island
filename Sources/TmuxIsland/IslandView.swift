@@ -6,6 +6,7 @@ extension AgentState {
         case .working: return Color(red: 1.0, green: 0.62, blue: 0.04)
         case .waiting: return Color(red: 1.0, green: 0.27, blue: 0.23)
         case .done: return Color(red: 0.19, green: 0.82, blue: 0.35)
+        case .background: return Color(red: 0.40, green: 0.65, blue: 1.0)
         case .idle: return Color.white.opacity(0.28)
         }
     }
@@ -15,6 +16,7 @@ extension AgentState {
         case .working: return "en cours"
         case .waiting: return "en attente"
         case .done: return "terminé"
+        case .background: return "en arrière-plan"
         case .idle: return "inactif"
         }
     }
@@ -195,6 +197,7 @@ struct IslandView: View {
             if store.workingCount > 0 { Pill(text: "\(store.workingCount)", color: AgentState.working.color) }
             if store.waitingCount > 0 { Pill(text: "\(store.waitingCount)", color: AgentState.waiting.color) }
             if store.doneCount > 0 { Pill(text: "\(store.doneCount)", color: AgentState.done.color) }
+            if store.backgroundCount > 0 { Pill(text: "\(store.backgroundCount)", color: AgentState.background.color) }
         }
     }
 
@@ -287,7 +290,8 @@ struct AgentRow: View {
                             .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
                         Spacer(minLength: 4)
                         if let u = agent.usage { ContextMeter(info: u) }
-                        Text(agent.state.label).font(.system(size: 10)).foregroundStyle(agent.state.color)
+                        Text(agent.state == .background ? agent.state.label + (agent.detail.map { " · \($0)" } ?? "") : agent.state.label)
+                            .font(.system(size: 10)).foregroundStyle(agent.state.color).lineLimit(1)
                         if agent.state != .idle {
                             Text(agent.since, style: .timer).font(.system(size: 10, design: .monospaced))
                                 .foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
@@ -530,6 +534,8 @@ struct StateDot: View {
                 Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(state.color)
             } else if state == .waiting {
                 Image(systemName: "exclamationmark").font(.system(size: 11, weight: .bold)).foregroundStyle(state.color)
+            } else if state == .background {
+                RingDot(color: state.color, size: 9)
             } else {
                 Circle().fill(state.color).frame(width: 7, height: 7)
             }
@@ -548,10 +554,30 @@ struct PulsingDot: View {
 }
 
 /// Point de l'aile compacte : respire quand l'agent travaille, bat plus fort quand il faut agir.
+/// Anneau creux qui respire lentement : « des shells tournent en arrière-plan », sans l'urgence d'un point plein.
+struct RingDot: View {
+    let color: Color
+    var size: CGFloat = 7
+    @State private var on = false
+    var body: some View {
+        Circle().stroke(color, lineWidth: max(1.5, size / 5)).frame(width: size, height: size)
+            .opacity(on ? 1 : 0.45)
+            .onAppear { withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { on = true } }
+    }
+}
+
 struct AgentDot: View {
     let state: AgentState
     @State private var on = false
     var body: some View {
+        if state == .background {
+            RingDot(color: state.color)
+        } else {
+            solid
+        }
+    }
+
+    private var solid: some View {
         Circle().fill(state.color).frame(width: 7, height: 7)
             .scaleEffect(animated ? (on ? 1.25 : 0.75) : 1)
             .opacity(state == .working ? (on ? 1 : 0.5) : 1)
