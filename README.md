@@ -5,8 +5,12 @@
 <h1 align="center">TmuxIsland</h1>
 
 <p align="center">
-  <b>La Dynamic Island de ton tmux.</b><br>
-  Sache quel agent IA a fini, lequel attend ta validation, et va dessus en <b>un clic</b>.
+  <b>The Dynamic Island for your tmux.</b><br>
+  See which AI agent finished, which one needs your approval, and jump to it in <b>one click</b>.
+</p>
+
+<p align="center">
+  <a href="https://kgrandemange.github.io/tmux-island-site/"><b>Website</b></a>
 </p>
 
 <p align="center">
@@ -14,165 +18,163 @@
   <img alt="tmux 3.x" src="https://img.shields.io/badge/tmux-3.x-1bb91f">
   <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI%20%2B%20AppKit-F05138?logo=swift&logoColor=white">
   <img alt="Tests" src="https://img.shields.io/badge/tests-43%20passing-brightgreen">
-  <img alt="Licence" src="https://img.shields.io/badge/licence-freeware%20(non%20open%20source)-blue">
-  <img alt="Statut" src="https://img.shields.io/badge/statut-b%C3%AAta%200.1.0-orange">
+  <img alt="License" src="https://img.shields.io/badge/license-freeware%20(not%20open%20source)-blue">
+  <img alt="Status" src="https://img.shields.io/badge/status-beta%200.1.0-orange">
 </p>
 
 <p align="center">
-  <img src="docs/assets/island-expanded.png" width="720" alt="L'île dépliée : un agent en attente avec ses boutons de validation, un agent terminé, un agent en cours, et les sessions tmux">
+  <img src="docs/assets/island-expanded.png" width="720" alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent, and the tmux sessions">
 </p>
 
-> Les données des captures sont fictives (projets « shop-web », « shop-api », « shop-infra »).
+> Screenshot data is fictional (projects "shop-web", "shop-api", "shop-infra"). The app's interface is currently in French.
 
-## Pourquoi
+## Why
 
-Tu fais tourner plusieurs agents IA (Claude Code, Codex…) dans des fenêtres tmux différentes. Pendant qu'ils
-travaillent, tu es ailleurs. Quand l'un d'eux finit ou te demande une permission, **rien ne te prévient**, et tu
-perds du temps à retrouver *quelle* session, *quelle* fenêtre, *quel* pane.
+You run several AI agents (Claude Code, Codex…) in different tmux windows. While they work, you are somewhere
+else. When one finishes or asks for a permission, **nothing tells you**, and you waste time finding *which*
+session, *which* window, *which* pane.
 
-TmuxIsland vit autour de la notch de ton Mac (ou en pilule en haut de l'écran) :
+TmuxIsland lives around your Mac's notch (or as a pill at the top of the screen):
 
-- **d'un coup d'œil** : un point par agent, rouge s'il attend, vert s'il a fini, orange s'il travaille ;
-- **à l'instant T** : un toast annonce la fin d'une tâche, avec un son, sur l'écran où tu regardes ;
-- **en un clic** : tu arrives sur le bon pane tmux **et** le bon terminal, sans chercher.
+- **at a glance**: one dot per agent: red if it waits for you, green if it finished, orange while it works;
+- **right on time**: a toast announces a finished task, with a sound, on the screen you are looking at;
+- **in one click**: you land on the right tmux pane **and** the right terminal, with nothing to search for.
 
-## Pensé pour tmux, pas pour un terminal
+## Built for tmux, not for a terminal
 
-TmuxIsland ne s'accroche à aucun terminal : il lit **tmux lui-même**. Tout ce qu'il sait vient de
-`tmux list-panes`, `capture-pane`, `list-clients`, et tout ce qu'il fait passe par `select-window`, `select-pane`,
-`switch-client` et `send-keys`. Résultat : ça marche **avec n'importe quel terminal** (WezTerm, Ghostty, iTerm2,
-kitty, Alacritty, Terminal.app…), en local comme dans des sessions longues et détachées.
+TmuxIsland doesn't hook into any terminal: it reads **tmux itself**. Everything it knows comes from
+`tmux list-panes`, `capture-pane` and `list-clients`, and everything it does goes through `select-window`,
+`select-pane`, `switch-client` and `send-keys`. The result: it works with **any terminal** (WezTerm, Ghostty,
+iTerm2, kitty, Alacritty, Terminal.app…), whether your sessions are local, long-lived or detached.
 
-| Ce qui se passe | Côté tmux |
+| What happens | On the tmux side |
 |---|---|
-| Un clic sur un agent | `select-window` + `select-pane` + `switch-client` sur le bon client, puis le terminal passe devant |
-| La session n'est affichée nulle part | un terminal s'ouvre et exécute `tmux attach-session -t =session` |
-| Plusieurs terminaux ouverts | le client déjà affiché sur la session cible est préféré |
-| Valider une permission, répondre | `send-keys` dans le pane de l'agent |
-| Aperçu au survol | `capture-pane` (les 10 dernières lignes réelles) |
-| Plusieurs serveurs tmux (`-L`, `-S`) | tous les sockets sont découverts et suivis |
+| You click an agent | `select-window` + `select-pane` + `switch-client` on the right client, then the terminal comes to the front |
+| The session is displayed nowhere | a terminal opens and runs `tmux attach-session -t =session` |
+| Several terminals are open | the client already showing the target session is preferred |
+| Approve a permission, reply | `send-keys` into the agent's pane |
+| Peek on hover | `capture-pane` (the last 10 real lines) |
+| Several tmux servers (`-L`, `-S`) | every socket is discovered and followed |
 
-## Fonctionnalités
+## Features
 
 <table>
 <tr>
-<td width="50%"><img src="docs/assets/island-compact.png" alt="Île compacte avec un point par agent"><br><b>Toujours là, jamais gênant.</b> Un point par agent autour de la notch, le nombre de sessions à gauche.</td>
-<td width="50%"><img src="docs/assets/island-toast.png" alt="Toast de fin de tâche"><br><b>Un toast cliquable</b> quand un agent finit ou attend. Un clic et tu y es.</td>
+<td width="50%"><img src="docs/assets/island-compact.png" alt="Compact island with one dot per agent"><br><b>Always there, never in the way.</b> One dot per agent around the notch, the session count on the left.</td>
+<td width="50%"><img src="docs/assets/island-toast.png" alt="Toast announcing a finished task"><br><b>A clickable toast</b> when an agent finishes or waits. One click and you're there.</td>
 </tr>
 </table>
 
-- **Choix de validation réels** : pour un agent en attente, les options du menu lues à l'écran (« 1 · Yes »,
-  « 2 · Yes, always », « 3 · No »…) deviennent des boutons. Plus besoin de changer de fenêtre.
-- **Aperçu du pane au survol** : les dernières lignes de l'agent, sans quitter ce que tu fais.
-- **Jauge de contexte** (Claude Code) : où en est la fenêtre de contexte de chaque session.
-- **Historique des fins** : retrouve l'agent que tu as raté, même après l'avoir acquitté.
-- **Prochain agent à traiter** (`⌃⌥J`) : saute directement au plus ancien « terminé » ou « en attente ».
-- **Mode concentration** (`⌃⌥F`) : plus de son ni de toast, seuls les points restent.
-- **Suivre l'écran actif** : l'île et les alertes viennent là où se trouve ton curseur (multi-écrans).
-- **Auto-acquittement** : un « terminé » disparaît quand tu regardes déjà le pane.
-- **Toutes tes sessions tmux** en un coup d'œil, avec les noms de fenêtres en entier.
+- **Real approval choices**: for a waiting agent, the options of the permission menu read from the screen
+  ("1 · Yes", "2 · Yes, always", "3 · No"…) become buttons. No more window switching.
+- **Pane preview on hover**: the last lines of the agent, without leaving what you're doing.
+- **Context gauge** (Claude Code): how full each session's context window is.
+- **History of finishes**: find the agent you missed, even after dismissing it.
+- **Next agent to handle** (`⌃⌥J`): jumps straight to the oldest "done" or "waiting" agent.
+- **Focus mode** (`⌃⌥F`): no sound, no toast; only the dots remain.
+- **Follow the active screen**: the island and its alerts come to where your cursor is (multi-display).
+- **Auto-acknowledge**: a "done" disappears when you are already looking at the pane.
+- **All your tmux sessions** at a glance, with full window names.
 
-<p align="center"><img src="docs/assets/island-preview.png" width="640" alt="Aperçu du pane au survol d'un agent en cours"></p>
+<p align="center"><img src="docs/assets/island-preview.png" width="640" alt="Pane preview when hovering a running agent"></p>
 
 ## Installation
 
-Prérequis : macOS 14 ou plus récent, tmux 3.x. Pour construire depuis les sources : les outils en ligne de commande
-Xcode (`xcode-select --install`).
+Requirements: macOS 14 or later, tmux 3.x. To build from source: the Xcode command line tools
+(`xcode-select --install`).
 
 ```bash
-git clone <ce dépôt> && cd tmux-island
-./scripts/install.sh            # construit, installe dans ~/Applications et lance
-./scripts/install.sh --login    # idem + lancement automatique à la connexion
+git clone <this repository> && cd tmux-island
+./scripts/install.sh            # builds, installs into ~/Applications and launches
+./scripts/install.sh --login    # same + launch automatically at login
 ```
 
-TmuxIsland est un agent de barre de menus : pas d'icône dans le Dock. Le menu de l'icône donne accès à
-l'île, aux **Réglages…** (`⌘,`), au mode concentration et au lancement à la connexion.
+TmuxIsland is a menu bar agent: no Dock icon. The menu of its icon gives access to the island,
+**Settings…** (`⌘,`), focus mode and launch at login.
 
 <details>
-<summary><b>Archive prête à distribuer (<code>.zip</code>)</b></summary>
+<summary><b>Ready-to-distribute archive (<code>.zip</code>)</b></summary>
 
 ```bash
-./scripts/package.sh            # build/TmuxIsland-<version>.zip + empreinte SHA-256
+./scripts/package.sh            # build/TmuxIsland-<version>.zip + SHA-256 checksum
 ```
 
-L'app est signée « ad hoc » (pas de compte développeur Apple) : au premier lancement, **clic droit › Ouvrir**
-(ou `xattr -dr com.apple.quarantine TmuxIsland.app`).
+The app is ad-hoc signed (no Apple developer account): on first launch, **right-click › Open**
+(or `xattr -dr com.apple.quarantine TmuxIsland.app`).
 </details>
 
-### Hooks (optionnels)
+### Hooks (optional)
 
-TmuxIsland fonctionne sans rien configurer. Pour un « terminé / en attente » encore plus instantané, tu peux
-brancher des hooks sur Claude Code :
+TmuxIsland works without any setup. For an even more instant "done / waiting", you can plug hooks into Claude Code:
 
 ```bash
-./scripts/install-claude-hooks.sh   # fusionne dans ~/.claude/settings.json (sauvegarde créée avant)
+./scripts/install-claude-hooks.sh   # merges into ~/.claude/settings.json (a backup is made first)
 ```
 
-Codex : dans `~/.codex/config.toml` → `notify = ["~/.local/bin/tmux-island-hook", "codex"]`.
+Codex: in `~/.codex/config.toml` → `notify = ["~/.local/bin/tmux-island-hook", "codex"]`.
 
-## Utilisation
+## Usage
 
-| Action | Raccourci par défaut |
+| Action | Default shortcut |
 |---|---|
-| Ouvrir / fermer l'île | `⌃⌥Space` (ou survol de la notch) |
-| Aller au prochain agent à traiter | `⌃⌥J` |
-| Mode concentration | `⌃⌥F` |
-| Dans l'île : aller à l'agent n | `1`–`9` |
-| Dans l'île : prochain à traiter / concentration / fermer | `J` / `F` / `Esc` |
+| Open / close the island | `⌃⌥Space` (or hover the notch) |
+| Jump to the next agent to handle | `⌃⌥J` |
+| Focus mode | `⌃⌥F` |
+| In the island: go to agent n | `1`–`9` |
+| In the island: next to handle / focus / close | `J` / `F` / `Esc` |
 
-Les trois raccourcis globaux sont modifiables dans **Réglages…** (refus s'ils n'ont pas de ⌃/⌥/⌘ ou s'ils sont déjà pris).
-Le même panneau règle le suivi d'écran, les sons et le lancement à la connexion.
+The three global shortcuts can be changed in **Settings…** (rejected if they have no ⌃/⌥/⌘ or are already taken).
+The same panel controls screen following, sounds and launch at login.
 
-## Comment il détecte l'état d'un agent
+## How it detects an agent's state
 
-Par ordre de fiabilité :
+In order of reliability:
 
-1. **Statut officiel de la session** (Claude Code) : `~/.claude/sessions/<pid>.json` donne `busy` / `idle` et relie la
-   session à son pane tmux. Aucune config nécessaire.
-2. **Hooks** (si installés) : `UserPromptSubmit`, `Notification`, `Stop`…
-3. **Écran du pane** : `esc to interrupt` (en cours), `Do you want to…` (en attente), `Interrupted` (interrompu : pas
-   d'alerte). C'est aussi ce qui permet de suivre Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent ou Goose.
+1. **Official session status** (Claude Code): `~/.claude/sessions/<pid>.json` provides `busy` / `idle` and links the
+   session to its tmux pane. No setup needed.
+2. **Hooks** (if installed): `UserPromptSubmit`, `Notification`, `Stop`…
+3. **The pane's screen**: `esc to interrupt` (running), `Do you want to…` (waiting), `Interrupted` (interrupted: no
+   alert). This is also how Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent or Goose are tracked.
 
-Une interruption à la main (`Esc`) n'est jamais signalée comme une fin de tâche.
+A manual interruption (`Esc`) is never reported as a finished task.
 
-## Confidentialité
+## Privacy
 
-Tout reste sur ta machine : **le code ne contient aucun appel réseau**. TmuxIsland lit tmux, la fin des transcripts
-Claude Code (pour la jauge de contexte) et les fichiers d'état de `~/.claude/sessions` et
-`~/.local/state/tmux-island`. Il ne modifie ta configuration que si tu lances toi-même un script d'installation.
+Everything stays on your machine: **the code contains no networking calls**. TmuxIsland reads tmux, the tail of
+Claude Code transcripts (for the context gauge) and the state files in `~/.claude/sessions` and
+`~/.local/state/tmux-island`. It only changes your configuration if you run an install script yourself.
 
 ## Architecture
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `TmuxService.swift` | tmux (panes, clients, capture, serveurs multiples), table des processus, hooks |
-| `StateResolver.swift` / `Screen.swift` | machine à états des agents (fonction pure testée) et lecture de l'écran |
-| `AgentStore.swift` | relevés, FSEvents, alertes, historique |
-| `ClaudeUsage.swift` | sessions et jauge de contexte de Claude Code |
-| `FocusService.swift` / `TerminalLauncher.swift` | saut vers le pane, activation du terminal, ré-attache |
-| `IslandController.swift` / `IslandView.swift` | fenêtre non activante sur la notch, survol, interface SwiftUI |
-| `Shortcuts.swift` / `SettingsView.swift` | raccourcis globaux configurables et réglages |
+| `TmuxService.swift` | tmux (panes, clients, capture, multiple servers), process table, hooks |
+| `StateResolver.swift` / `Screen.swift` | agent state machine (a tested pure function) and screen reading |
+| `AgentStore.swift` | polling, FSEvents, alerts, history |
+| `ClaudeUsage.swift` | Claude Code sessions and context gauge |
+| `FocusService.swift` / `TerminalLauncher.swift` | jump to a pane, bring the terminal forward, reattach |
+| `IslandController.swift` / `IslandView.swift` | non-activating window on the notch, hover, SwiftUI interface |
+| `Shortcuts.swift` / `SettingsView.swift` | configurable global shortcuts and settings |
 
-## Développement
+## Development
 
 ```bash
-swift test                                   # 43 tests : machine à états, écran, menus de validation, terminaux
-.build/release/TmuxIsland --snapshot out.png         # rend l'île avec tes vraies sessions
-.build/release/TmuxIsland --demo-images docs/assets  # rend les captures de la doc (données fictives)
+swift test                                   # 43 tests: state machine, screen, approval menus, terminals
+.build/release/TmuxIsland --snapshot out.png         # renders the island with your real sessions
+.build/release/TmuxIsland --demo-images docs/assets  # renders the documentation images (fictional data)
 ```
 
 ## FAQ
 
-**Ça marche avec mon terminal ?** Oui, puisque tout passe par tmux. La mise au premier plan du bon *onglet* est
-vérifiée avec WezTerm ; pour les autres terminaux, l'application est amenée devant et le bon pane est sélectionné
-dans tmux.
+**Does it work with my terminal?** Yes, since everything goes through tmux. Bringing the right *tab* to the front is
+verified with WezTerm; for other terminals the app is brought forward and the right pane is selected in tmux.
 
-**Et sur un Mac sans notch ?** L'île devient une pilule centrée en haut de l'écran.
+**What about a Mac without a notch?** The island becomes a pill centered at the top of the screen.
 
-**Pourquoi pas de coût en dollars ?** Avec un abonnement, ce serait une estimation au tarif API qui ne
-correspond à aucune facture, et elle ne peut pas être recalculée fiablement depuis les transcripts.
+**Why no dollar cost?** With a subscription it would be an API-rate estimate that matches no invoice, and it can't be
+recomputed reliably from the transcripts.
 
-## Licence
+## License
 
-Gratuit, **non open source** : voir [LICENSE](LICENSE). Usage libre ; modification et redistribution interdites sans
-autorisation.
+Free to use, **not open source**: see [LICENSE](LICENSE). Free to use; modification and redistribution are
+forbidden without permission.
