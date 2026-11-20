@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Hook appelé par les agents IA pour signaler leur état à TmuxIsland.
+#   tmux-island-hook <working|waiting|done|end> [agent]     (Claude Code : JSON sur stdin)
+#   tmux-island-hook codex '<json>'                          (Codex `notify` : JSON en argument)
+# N'a aucun effet hors d'un pane tmux.
+[ -z "$TMUX_PANE" ] && exit 0
+
+state="$1"; agent="${2:-claude}"; msg=""
+dir="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-island"
+pane="${TMUX_PANE#%}"
+mkdir -p "$dir"
+
+# Codex appelle `notify` avec le JSON en dernier argument : fin de tour = done.
+if [ "$state" = "codex" ]; then state="done"; agent="codex"; fi
+
+if [ "$state" = "end" ]; then rm -f "$dir/$pane.json"; exit 0; fi
+
+if [ ! -t 0 ] && command -v jq >/dev/null 2>&1; then
+  msg=$(jq -r '.message // empty' 2>/dev/null)
+fi
+# Claude Code envoie aussi un Notification « waiting for your input » après 60 s d'inactivité :
+# ce n'est pas une demande de validation, on garde l'état « done ».
+if [ "$state" = "waiting" ] && printf '%s' "$msg" | grep -qi "waiting for your input"; then exit 0; fi
+
+tmp="$dir/.$pane.$$"
+if command -v jq >/dev/null 2>&1; then
+  jq -n --arg s "$state" --arg a "$agent" --arg m "$msg" --argjson t "$(date +%s)" \
+    '{state:$s, agent:$a, ts:$t, message:(if $m=="" then null else $m end)}' > "$tmp"
+else
+  printf '{"state":"%s","agent":"%s","ts":%s}\n' "$state" "$agent" "$(date +%s)" > "$tmp"
+fi
+mv "$tmp" "$dir/$pane.json"
