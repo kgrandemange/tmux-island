@@ -9,6 +9,7 @@ final class IslandModel: ObservableObject {
     @Published var flashPane: String?
     /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
     @Published var toast: Agent?
+    @Published var historyOpen = false
     /// Pane dont l'aperçu de l'écran est déplié (survol d'une ligne).
     @Published var hoveredPane: String?
     private var hoverWork: DispatchWorkItem?

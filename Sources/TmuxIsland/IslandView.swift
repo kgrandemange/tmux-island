@@ -140,6 +140,7 @@ struct IslandView: View {
             header
             VStack(alignment: .leading, spacing: 12) {
                 agentsSection
+                if !store.history.isEmpty { historySection }
                 if !store.sessions.isEmpty { sessionsSection }
                 footer
             }
@@ -199,6 +200,28 @@ struct IslandView: View {
                     ScrollView(showsIndicators: false) { VStack(spacing: 6) { rows } }.frame(height: 6 * 60)
                 } else {
                     VStack(spacing: 6) { rows }
+                }
+            }
+        }
+    }
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) { model.historyOpen.toggle() }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: model.historyOpen ? "chevron.down" : "chevron.right").font(.system(size: 8, weight: .bold))
+                    Text("RÉCENTS").font(.system(size: 9, weight: .semibold)).tracking(1)
+                    Text("\(min(store.history.count, 10))").font(.system(size: 9, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(.tertiary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if model.historyOpen {
+                ForEach(store.history.prefix(10)) { e in
+                    HistoryRow(entry: e, pane: store.target(for: e), model: model)
                 }
             }
         }
@@ -311,6 +334,32 @@ struct AgentRow: View {
             model.hover(agent.id, inside: inside)
         }
         .onTapGesture { model.onJump?(agent) }
+    }
+}
+
+struct HistoryRow: View {
+    let entry: HistoryEntry
+    let pane: Pane?
+    @ObservedObject var model: IslandModel
+    @State private var hover = false
+
+    var body: some View {
+        let color = entry.waiting ? AgentState.waiting.color : AgentState.done.color
+        HStack(spacing: 8) {
+            Image(systemName: entry.waiting ? "exclamationmark" : "checkmark")
+                .font(.system(size: 8, weight: .bold)).foregroundStyle(color)
+                .frame(width: 16, height: 16).background(Circle().fill(color.opacity(0.2)))
+            Text("\(entry.agentName) · \(entry.project)").font(.system(size: 11, weight: .medium)).lineLimit(1)
+            Text("\(entry.session) › \(entry.windowName)").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
+            Spacer(minLength: 4)
+            Text(entry.date, style: .relative).font(.system(size: 10)).foregroundStyle(.tertiary).lineLimit(1)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(hover && pane != nil ? 0.1 : 0.04)))
+        .opacity(pane == nil ? 0.4 : 1)
+        .contentShape(Rectangle())
+        .onHover { hover = $0 }
+        .onTapGesture { if let pane { model.onJumpPane?(pane) } }
     }
 }
 

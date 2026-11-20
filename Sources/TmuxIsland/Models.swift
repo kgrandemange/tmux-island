@@ -63,6 +63,19 @@ struct Agent: Identifiable, Equatable {
     }
 }
 
+/// Une fin d'agent (terminé / en attente), conservée pour retrouver ce qu'on a raté.
+struct HistoryEntry: Codable, Identifiable, Equatable {
+    var id = UUID()
+    let paneID: String
+    let session: String
+    let windowIndex: Int
+    let windowName: String
+    let project: String
+    let agentName: String
+    let waiting: Bool
+    let date: Date
+}
+
 struct TmuxWindow: Identifiable {
     let index: Int
     let name: String

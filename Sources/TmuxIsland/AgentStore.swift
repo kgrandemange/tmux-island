@@ -55,6 +55,11 @@ final class AgentStore: ObservableObject {
     @Published private(set) var agents: [Agent] = []
     @Published private(set) var sessions: [TmuxSession] = []
     @Published private(set) var tmuxRunning = true
+    @Published private(set) var history: [HistoryEntry] = {
+        guard let d = UserDefaults.standard.data(forKey: "history"),
+              let h = try? JSONDecoder().decode([HistoryEntry].self, from: d) else { return [] }
+        return h
+    }()
 
     /// Émis quand un agent passe en « terminé » ou « attend une réponse ».
     let alerts = PassthroughSubject<Agent, Never>()
@@ -185,7 +190,10 @@ final class AgentStore: ObservableObject {
                               screen: Screen.preview(tail))
             result.append(agent)
 
-            if new != old, new.needsAttention, !firstPoll, !userHere { alerts.send(agent) }
+            if new != old, new.needsAttention, !firstPoll {
+                record(agent)
+                if !userHere { alerts.send(agent) }
+            }
         }
         tracks = tracks.filter { id, _ in result.contains(where: { $0.id == id }) }
         result.sort { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }
@@ -205,6 +213,23 @@ final class AgentStore: ObservableObject {
         sessions = sess.values.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
             .map { var s = $0; s.windows.sort { $0.index < $1.index }; return s }
         firstPoll = false
+    }
+
+    func record(_ a: Agent) {
+        if let last = history.first, last.paneID == a.id, last.waiting == (a.state == .waiting),
+           Date().timeIntervalSince(last.date) < 5 { return }
+        let e = HistoryEntry(paneID: a.id, session: a.pane.session, windowIndex: a.pane.windowIndex,
+                             windowName: a.pane.windowName, project: a.pane.project, agentName: a.displayName,
+                             waiting: a.state == .waiting, date: Date())
+        history = Array(([e] + history).prefix(30))
+        if let d = try? JSONEncoder().encode(history) { UserDefaults.standard.set(d, forKey: "history") }
+    }
+
+    /// Pane actuel correspondant à une entrée (même pane, sinon la fenêtre) ; nil si la session n'existe plus.
+    func target(for e: HistoryEntry) -> Pane? {
+        let all = sessions.flatMap(\.windows).flatMap(\.panes)
+        if let p = all.first(where: { $0.id == e.paneID && $0.session == e.session }) { return p }
+        return sessions.first { $0.name == e.session }?.windows.first { $0.index == e.windowIndex }?.activePane
     }
 
     func state(ofWindow w: TmuxWindow) -> AgentState? {

@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller = IslandController(store: store)
         controller.model.onJump = { [weak self] agent in self?.controller.jump(to: agent) }
         controller.model.onJumpPane = { [weak self] pane in
+            self?.store.acknowledge(pane.id)
             FocusService.jump(to: pane)
             self?.controller.setExpanded(false)
         }
@@ -65,6 +66,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLi
         let store = AgentStore()
         let model = IslandModel()
         model.expanded = true
+        model.historyOpen = true
         store.start()
         RunLoop.main.run(until: Date().addingTimeInterval(2.5))
         model.hoveredPane = store.visibleAgents.first?.id
