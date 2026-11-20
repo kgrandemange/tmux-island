@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TmuxIsland — La Dynamic Island de ton tmux</title>
+  <meta name="description" content="Sache quel agent IA a fini ou attend ta validation, et va sur le bon pane tmux en un clic. Une île autour de la notch de ton Mac, couplée à tmux.">
+  <meta name="theme-color" content="#07080d">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="TmuxIsland — La Dynamic Island de ton tmux">
+  <meta property="og:description" content="Sache quel agent IA a fini ou attend ta validation, et va sur le bon pane tmux en un clic.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main" data-en="Skip to content">Aller au contenu</a>
+<div class="glow" aria-hidden="true"></div>
+
+<!-- Icônes (sprite) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-click" viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-2 6z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-screens" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt="" width="28" height="28"> TmuxIsland</a>
+    <ul>
+      <li><a href="#tmux" data-en="tmux">tmux</a></li>
+      <li><a href="#features" data-en="Features">Fonctionnalités</a></li>
+      <li><a href="#how" data-en="How it works">Comment ça marche</a></li>
+      <li><a href="#install" data-en="Install">Installation</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="lang" role="group" aria-label="Langue / Language">
+      <button type="button" data-lang="fr" aria-pressed="true">FR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<!-- ============ HERO ============ -->
+<div class="hero wrap" id="top">
+  <span class="pill"><b>macOS</b> · <span data-en="Built on tmux · Free">Couplé à tmux · Gratuit</span></span>
+  <h1><span data-en="Your tmux, in">Ton tmux, dans</span> <span class="grad" data-en="the notch.">la notch.</span></h1>
+  <p class="lead" data-en="Know which AI agent finished or needs your approval, and jump to the right pane in one click. Nothing to hunt for, nothing to configure.">Sache quel agent IA a fini ou attend ta validation, et va sur le bon pane en un clic. Rien à chercher, rien à configurer.</p>
+  <div class="cta">
+    <span class="btn primary" aria-disabled="true"><span data-en="Download — coming soon">Télécharger — bientôt</span></span>
+    <a class="btn" href="#tmux" data-en="See how it works with tmux">Voir le couplage avec tmux</a>
+  </div>
+  <p class="meta" data-en="macOS 14+ · tmux 3.x · everything stays on your Mac">macOS 14+ · tmux 3.x · tout reste sur ton Mac</p>
+
+  <!-- Maquette animée de l'île -->
+  <div class="stage" id="stage" role="img" data-en-label="Animation: the island goes from compact, to a toast when an agent finishes, to expanded with its actions" aria-label="Animation : l'île passe de compacte à un toast quand un agent finit, puis se déplie avec ses actions">
+    <div class="menubar" aria-hidden="true"><b></b><b>Terminal</b><span>Shell</span><span>Edit</span><span>View</span><span class="sp">▮▮ 82%</span><span>Fri 14:12</span></div>
+    <div class="desk" aria-hidden="true">
+      <div class="bar"><i></i><i></i><i></i></div>
+<pre><b>$</b> claude
+● Refactoring invoice totals…
+  ⎿ Updated src/invoice/totals.ts
+<b>$</b> tmux list-sessions
+api: 3 windows (attached)
+infra: 2 windows
+web: 4 windows (attached)</pre>
+      <div class="status"><b>[api]</b><span>0:server</span><span><u>1:payments*</u></span><span>2:tests</span><span>3:logs</span></div>
+    </div>
+    <div class="island" id="island" data-state="compact" aria-hidden="true">
+      <!-- compact -->
+      <div class="layer l-compact">
+        <span class="l"><i class="term-ic"></i> 3</span>
+        <span class="r"><i class="dot waiting"></i><i class="dot done"></i><i class="dot working"></i></span>
+      </div>
+      <!-- toast -->
+      <div class="layer l-toast">
+        <span class="l">shop-infra <i class="dot done"></i></span>
+        <span class="r" data-en="done">terminé</span>
+      </div>
+      <!-- déplié -->
+      <div class="layer l-expanded">
+        <div class="x-head"><i class="term-ic" style="color:#999"></i><b>tmux</b><span><i class="dot working"></i> 1 <i class="dot waiting"></i> 1 <i class="dot done"></i> 1</span><span class="grow"></span><span class="conc" data-en="Focus">Concentration</span><kbd>⌃⌥Space</kbd></div>
+        <div class="row">
+          <span class="ic waiting">!</span><span class="t">Claude<span>web › checkout-ui</span></span><span class="st waiting" data-en="waiting">en attente</span>
+          <span class="s"><i>shop-web</i>Claude needs your permission to use Bash</span>
+          <div class="acts"><span class="p">1 · Yes</span><span>2 · Yes, always</span><span>3 · No</span></div>
+        </div>
+        <div class="row">
+          <span class="ic done">✓</span><span class="t">Codex<span>infra › terraform</span></span><span class="st done" data-en="done">terminé</span>
+          <span class="s"><i>shop-infra</i>✔ Staging environment is up to date.</span>
+        </div>
+        <div class="row">
+          <span class="ic working"><i></i></span><span class="t">Claude<span>api › payments</span></span><span class="st working"><span class="gauge"><b></b>640k</span><span data-en="running">en cours</span></span>
+          <span class="s"><i>shop-api</i>✻ Refactoring invoice totals… (1m 12s)</span>
+        </div>
+        <div class="sess">
+          <div><em>api</em><span class="on"><i class="dot working"></i>1 payments</span><span>2 tests</span><span>3 logs</span></div>
+          <div><em>web</em><span>1 editor</span><span class="on"><i class="dot waiting"></i>2 checkout-ui</span><span>3 storybook</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="stage-caption" aria-hidden="true"><span class="steps"><i></i><i></i><i></i></span> &nbsp; <span data-en="Hover to expand">Survole la scène pour la déplier</span></div>
+  </div>
+</div>
+
+<!-- ============ TMUX ============ -->
+<section class="tmux" id="tmux">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow" data-en="Built for tmux">Pensé pour tmux</span>
+      <h2 data-en="It doesn't talk to your terminal. It talks to tmux.">Il ne parle pas à ton terminal. Il parle à tmux.</h2>
+      <p class="sub" data-en="Most notch tools hook into one app. TmuxIsland hooks into the one thing all your terminals share: your tmux server. That's why it works everywhere, and why a click lands exactly where the agent is waiting.">La plupart des outils de notch s'accrochent à une application. TmuxIsland s'accroche à ce que tous tes terminaux ont en commun : ton serveur tmux. C'est pour ça que ça marche partout, et qu'un clic t'amène exactement là où l'agent t'attend.</p>
+    </div>
+
+    <div class="split">
+      <ul class="checks reveal">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>
+          <span data-en="<b>One language.</b> Everything it reads (<code>list-panes</code>, <code>capture-pane</code>, <code>list-clients</code>) and everything it does (<code>select-window</code>, <code>select-pane</code>, <code>switch-client</code>, <code>send-keys</code>) goes through tmux."><b>Un seul langage.</b> Tout ce qu'il lit (<code>list-panes</code>, <code>capture-pane</code>, <code>list-clients</code>) et tout ce qu'il fait (<code>select-window</code>, <code>select-pane</code>, <code>switch-client</code>, <code>send-keys</code>) passe par tmux.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>
+          <span data-en="<b>Any terminal.</b> WezTerm, Ghostty, iTerm2, kitty, Alacritty, Terminal.app: tmux is the common ground."><b>N'importe quel terminal.</b> WezTerm, Ghostty, iTerm2, kitty, Alacritty, Terminal.app : tmux est le point commun.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>
+          <span data-en="<b>Several servers.</b> The default server and every socket (<code>tmux -L</code>, <code>-S</code>) are followed."><b>Plusieurs serveurs.</b> Le serveur par défaut et tous les sockets (<code>tmux -L</code>, <code>-S</code>) sont suivis.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>
+          <span data-en="<b>Detached session? It reattaches it.</b> If nothing displays the target session, a terminal opens and attaches to it."><b>Session détachée ? Il la rattache.</b> Si rien n'affiche la session cible, un terminal s'ouvre et s'y attache.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>
+          <span data-en="<b>No tmux plugin.</b> Nothing to add to your <code>.tmux.conf</code>."><b>Aucun plugin tmux.</b> Rien à ajouter à ton <code>.tmux.conf</code>.</span></li>
+      </ul>
+
+      <div class="card term reveal" role="img" data-en-label="Terminal showing the tmux commands the island runs when you click an agent" aria-label="Terminal montrant les commandes tmux lancées par l'île quand tu cliques sur un agent">
+        <div class="term-bar"><i></i><i></i><i></i><span data-en="tmux — what the island runs">tmux — ce que l'île exécute</span></div>
+<pre><span class="c" data-en="# every second, and on file changes"># chaque seconde, et à chaque changement de fichier</span>
+<span class="k">$</span> tmux list-panes -a -F <span class="y">'#{pane_id} #{session_name} …'</span>
+<span class="k">$</span> tmux capture-pane -p -t <span class="a">%12</span>      <span class="c" data-en="# what is the agent saying?"># que dit l'agent ?</span>
+
+<span class="c" data-en="# you click &quot;shop-api › payments&quot;"># tu cliques sur « shop-api › payments »</span>
+<span class="k">$</span> tmux select-window -t <span class="a">=api:1</span>
+<span class="k">$</span> tmux select-pane   -t <span class="a">%12</span>
+<span class="k">$</span> tmux switch-client -c <span class="a">/dev/ttys003</span> -t <span class="a">=api</span>
+<span class="c" data-en="# …and the terminal comes to the front"># …et le terminal passe devant</span>
+
+<span class="c" data-en="# you pick &quot;2 · Yes, always&quot;"># tu choisis « 2 · Yes, always »</span>
+<span class="k">$</span> tmux send-keys -t <span class="a">%12</span> -l <span class="y">2</span></pre>
+        <div class="tmuxbar" aria-hidden="true"><b>[api]</b><span>0:server</span><span class="cur">1:payments*</span><span>2:tests</span><span>3:logs</span></div>
+      </div>
+    </div>
+
+    <div class="flow reveal">
+      <div class="card node"><h3 data-en="Your agents">Tes agents</h3><p data-en="Claude Code, Codex, Gemini CLI… in tmux panes">Claude Code, Codex, Gemini CLI… dans des panes tmux</p></div>
+      <div class="arrow">→</div>
+      <div class="card node mid"><h3>TmuxIsland</h3><p data-en="Observes, decides, acts">Observe, décide, agit</p></div>
+      <div class="arrow">→</div>
+      <div class="card node"><h3 data-en="The right pane">Le bon pane</h3><p data-en="In the right terminal, one click away">Dans le bon terminal, à un clic</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FONCTIONNALITÉS ============ -->
+<section id="features">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow" data-en="Features">Fonctionnalités</span>
+      <h2 data-en="Everything you need to stop babysitting agents.">Tout pour arrêter de surveiller tes agents.</h2>
+    </div>
+    <div class="grid">
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-dots"/></svg></div>
+        <h3 data-en="One dot per agent">Un point par agent</h3><p data-en="Red if it waits for you, green if it's done, orange while it works. Always visible around the notch.">Rouge s'il t'attend, vert s'il a fini, orange pendant qu'il travaille. Toujours visible autour de la notch.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-click"/></svg></div>
+        <h3 data-en="One click, the right pane">Un clic, le bon pane</h3><p data-en="Window, pane and terminal: you land exactly where the agent is waiting for you.">Fenêtre, pane et terminal : tu arrives exactement là où l'agent t'attend.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg></div>
+        <h3 data-en="Approve without switching">Valide sans changer de fenêtre</h3><p data-en="The real choices of the permission menu (Yes, Yes always, No) become buttons.">Les vrais choix du menu de permission (Yes, Yes always, No) deviennent des boutons.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-eye"/></svg></div>
+        <h3 data-en="Peek on hover">Aperçu au survol</h3><p data-en="The last 10 lines of the pane, without leaving what you're doing.">Les 10 dernières lignes du pane, sans quitter ce que tu fais.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-gauge"/></svg></div>
+        <h3 data-en="Context gauge">Jauge de contexte</h3><p data-en="How full each Claude Code session's context window is.">Où en est la fenêtre de contexte de chaque session Claude Code.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg></div>
+        <h3 data-en="History of finishes">Historique des fins</h3><p data-en="Find the agent you missed, even after you dismissed it.">Retrouve l'agent que tu as raté, même après l'avoir acquitté.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-moon"/></svg></div>
+        <h3 data-en="Focus mode">Mode concentration</h3><p data-en="No sound, no toast: only the dots remain.">Plus de son ni de toast : seuls les points restent.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-screens"/></svg></div>
+        <h3 data-en="Multi-display">Multi-écrans</h3><p data-en="The island and its alerts follow your cursor from one screen to the other.">L'île et ses alertes suivent ton curseur d'un écran à l'autre.</p></article>
+      <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-key"/></svg></div>
+        <h3 data-en="Global shortcuts">Raccourcis globaux</h3><p data-en="Open the island, jump to the next agent to handle, toggle focus. All configurable.">Ouvre l'île, saute au prochain agent à traiter, active la concentration. Tout est configurable.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALERIE ============ -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow" data-en="In action">En action</span>
+      <h2 data-en="Compact when quiet. Complete when you need it.">Discrète au repos. Complète quand il le faut.</h2>
+      <p class="sub" data-en="Screenshots use fictional projects.">Les captures utilisent des projets fictifs.</p>
+    </div>
+    <div class="shots">
+      <figure class="card reveal"><img src="assets/island-expanded.png" width="760" height="520" loading="lazy" alt="L'île dépliée : un agent en attente avec boutons de validation, un agent terminé, un agent en cours et les sessions tmux" data-en-alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent and the tmux sessions">
+        <figcaption data-en="<b>Expanded.</b> Agents sorted by urgency, real approval buttons, and every tmux session as clickable chips."><b>Dépliée.</b> Les agents triés par urgence, de vrais boutons de validation, et toutes tes sessions tmux en puces cliquables.</figcaption></figure>
+      <figure class="card reveal"><img src="assets/island-preview.png" width="760" height="640" loading="lazy" alt="Aperçu des dernières lignes du pane au survol d'un agent en cours" data-en-alt="Preview of the pane's last lines when hovering a running agent">
+        <figcaption data-en="<b>Peek.</b> Hover an agent to read the real end of its pane, with a context gauge for Claude Code."><b>Aperçu.</b> Survole un agent pour lire la vraie fin de son pane, avec la jauge de contexte pour Claude Code.</figcaption></figure>
+      <figure class="card reveal"><img src="assets/island-toast.png" width="560" height="90" loading="lazy" alt="Toast : le projet shop-infra est terminé" data-en-alt="Toast: the shop-infra project is done">
+        <figcaption data-en="<b>The toast.</b> An agent finishes: the island widens for a few seconds. One click and you're there."><b>Le toast.</b> Un agent finit : l'île s'élargit quelques secondes. Un clic et tu y es.</figcaption></figure>
+      <figure class="card reveal"><img src="assets/island-compact.png" width="560" height="90" loading="lazy" alt="Île compacte avec un point par agent" data-en-alt="Compact island with one dot per agent">
+        <figcaption data-en="<b>At rest.</b> One dot per agent, and the number of tmux sessions."><b>Au repos.</b> Un point par agent, et le nombre de sessions tmux.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMMENT ÇA MARCHE ============ -->
+<section id="how">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow" data-en="How it works">Comment ça marche</span>
+      <h2 data-en="Observe. Decide. Act.">Observer. Décider. Agir.</h2>
+    </div>
+    <div class="steps3">
+      <div class="card step reveal"><h3 data-en="Observe">Observer</h3><p data-en="It reads tmux, the official status of Claude Code sessions (<code>~/.claude/sessions</code>) and, when needed, the pane's screen. File changes trigger an instant refresh.">Il lit tmux, le statut officiel des sessions Claude Code (<code>~/.claude/sessions</code>) et, au besoin, l'écran du pane. Un changement de fichier déclenche un relevé immédiat.</p></div>
+      <div class="card step reveal"><h3 data-en="Decide">Décider</h3><p data-en="A state machine tells running, waiting and done apart, and ignores your own interruptions (Esc).">Une machine à états distingue en cours, en attente et terminé, et ignore tes propres interruptions (Esc).</p></div>
+      <div class="card step reveal"><h3 data-en="Act">Agir</h3><p data-en="It alerts you (dot, toast, sound). You click, it runs <code>select-window</code>, <code>select-pane</code> and <code>switch-client</code>, then brings your terminal forward.">Il te prévient (point, toast, son). Tu cliques, il lance <code>select-window</code>, <code>select-pane</code> et <code>switch-client</code>, puis amène ton terminal devant.</p></div>
+    </div>
+
+    <div class="keys reveal">
+      <div><span data-en="Open / close the island">Ouvrir / fermer l'île</span><kbd>⌃⌥ Space</kbd></div>
+      <div><span data-en="Jump to the next agent to handle">Aller au prochain agent à traiter</span><kbd>⌃⌥ J</kbd></div>
+      <div><span data-en="Focus mode">Mode concentration</span><kbd>⌃⌥ F</kbd></div>
+      <div><span data-en="In the island: go to agent n">Dans l'île : aller à l'agent n</span><kbd>1 – 9</kbd></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTALLATION ============ -->
+<section id="install">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow" data-en="Install">Installation</span>
+      <h2 data-en="Up and running in a minute.">Prêt en une minute.</h2>
+    </div>
+    <div class="install">
+      <div class="card codebox reveal">
+        <div class="copy"><button type="button" data-en="Copy">Copier</button></div>
+<pre><span class="c" data-en="# build, install in ~/Applications, launch"># construit, installe dans ~/Applications, lance</span>
+<span class="k">$</span> ./scripts/install.sh
+
+<span class="c" data-en="# …and start at login"># …et lance à la connexion</span>
+<span class="k">$</span> ./scripts/install.sh --login</pre>
+      </div>
+      <ul class="card reqs reveal">
+        <li data-en="<b>macOS 14</b> or later (a notch is optional: without one, it's a pill)"><b>macOS 14</b> ou plus récent (la notch est facultative : sans elle, c'est une pilule)</li>
+        <li data-en="<b>tmux 3.x</b>"><b>tmux 3.x</b></li>
+        <li data-en="<b>Xcode command line tools</b> to build from source"><b>Outils en ligne de commande Xcode</b> pour construire depuis les sources</li>
+        <li data-en="<b>No account, no network.</b> Optional hooks for Claude Code and Codex."><b>Aucun compte, aucun réseau.</b> Hooks facultatifs pour Claude Code et Codex.</li>
+      </ul>
+    </div>
+    <p class="soon reveal" style="color:var(--muted)" data-en="A ready-to-use download is coming soon. For now, distribution is private.">Une archive prête à l'emploi arrive bientôt. Pour l'instant, la distribution est privée.</p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="reveal"><span class="eyebrow">FAQ</span><h2 data-en="Questions.">Questions.</h2></div>
+    <div class="faq reveal">
+      <details open><summary data-en="Does it work with my terminal?">Est-ce que ça marche avec mon terminal ?</summary>
+        <p data-en="Yes, since everything goes through tmux. Bringing the right <i>tab</i> to the front is verified with WezTerm; for other terminals the app is brought forward and the right pane is selected in tmux.">Oui, puisque tout passe par tmux. La mise au premier plan du bon <i>onglet</i> est vérifiée avec WezTerm ; pour les autres terminaux, l'application est amenée devant et le bon pane est sélectionné dans tmux.</p></details>
+      <details><summary data-en="Do I need to install hooks?">Faut-il installer des hooks ?</summary>
+        <p data-en="No. It works out of the box by reading Claude Code's own session status and the pane's screen. Hooks only make &quot;done / waiting&quot; even more instant.">Non. Ça fonctionne tout de suite en lisant le statut des sessions de Claude Code et l'écran du pane. Les hooks rendent seulement « terminé / en attente » encore plus instantané.</p></details>
+      <details><summary data-en="Does my data leave my Mac?">Mes données quittent-elles mon Mac ?</summary>
+        <p data-en="No. The app contains no networking code. It reads tmux, the tail of Claude Code transcripts (for the context gauge) and a few local state files.">Non. L'application ne contient aucun code réseau. Elle lit tmux, la fin des transcripts de Claude Code (pour la jauge de contexte) et quelques fichiers d'état locaux.</p></details>
+      <details><summary data-en="Which agents are supported?">Quels agents sont pris en charge ?</summary>
+        <p data-en="Claude Code is first-class (official status, context gauge, approval buttons). Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent and Goose are detected through the process and the pane's screen.">Claude Code est pris en charge en priorité (statut officiel, jauge de contexte, boutons de validation). Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent et Goose sont détectés via le processus et l'écran du pane.</p></details>
+      <details><summary data-en="What about a Mac without a notch?">Et sur un Mac sans notch ?</summary>
+        <p data-en="The island becomes a pill centered at the top of the screen. With several displays, an option makes it follow your cursor.">L'île devient une pilule centrée en haut de l'écran. Avec plusieurs écrans, une option la fait suivre ton curseur.</p></details>
+      <details><summary data-en="Why free but not open source?">Pourquoi gratuit mais pas open source ?</summary>
+        <p data-en="TmuxIsland is free to use. The source isn't public: the license forbids modification and redistribution.">TmuxIsland est gratuit à utiliser. Le code source n'est pas public : la licence interdit la modification et la redistribution.</p></details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt="" width="28" height="28"> TmuxIsland</a>
+    <span data-en="Free to use · not open source · macOS 14+">Gratuit · non open source · macOS 14+</span>
+    <span>© 2026</span>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>
