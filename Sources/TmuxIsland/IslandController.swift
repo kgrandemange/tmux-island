@@ -12,7 +12,7 @@ final class IslandModel: ObservableObject {
     var hasActivity = false
     let wing: CGFloat = 74
     let expandedW: CGFloat = 560
-    var compactW: CGFloat { notchW + (hasActivity ? 2 * wing : 0) }
+    var compactW: CGFloat { notchW + 2 * wing }
     var requestKey: (() -> Void)?
     var onJump: ((Agent) -> Void)?
     var onJumpPane: ((Pane) -> Void)?
