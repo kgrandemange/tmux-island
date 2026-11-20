@@ -184,6 +184,15 @@ final class AgentStore: ObservableObject {
         firstPoll = false
     }
 
+    /// Charge des données fictives (documentation, captures d'écran) sans interroger tmux.
+    func loadDemo() {
+        let d = DemoData.make()
+        agents = d.agents
+        sessions = d.sessions
+        history = d.history
+        tmuxRunning = true
+    }
+
     func record(_ a: Agent) {
         if let last = history.first, last.paneID == a.id, last.waiting == (a.state == .waiting),
            Date().timeIntervalSince(last.date) < 5 { return }
