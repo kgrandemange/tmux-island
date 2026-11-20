@@ -51,7 +51,7 @@ final class IslandModel: ObservableObject {
     var notchH: CGFloat = 32
     var hasActivity = false
     let wing: CGFloat = 74
-    let expandedW: CGFloat = 560
+    let expandedW: CGFloat = 600
     var compactW: CGFloat { notchW + 2 * (toast == nil ? wing : toastWing) }
     let toastWing: CGFloat = 150
     var requestKey: (() -> Void)?

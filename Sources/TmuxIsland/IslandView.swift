@@ -147,15 +147,15 @@ struct IslandView: View {
     private var expanded: some View {
         VStack(spacing: 0) {
             header
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 agentsSection
                 if !store.history.isEmpty { historySection }
                 if !store.sessions.isEmpty { sessionsSection }
                 footer
             }
-            .padding(.horizontal, 22)
-            .padding(.top, 10)
-            .padding(.bottom, 20)
+            .padding(.horizontal, 34)
+            .padding(.top, 16)
+            .padding(.bottom, 18)
         }
     }
 
@@ -166,7 +166,7 @@ struct IslandView: View {
                 Text("tmux").font(.system(size: 12, weight: .semibold))
                 summaryPills
             }
-            .padding(.leading, 28)
+            .padding(.leading, 34)
             Spacer(minLength: model.notchW)
             HStack(spacing: 10) {
                 Button { model.onToggleFocus?() } label: {
@@ -181,7 +181,7 @@ struct IslandView: View {
                 .buttonStyle(.plain)
                 Text("⌃⌥Space").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
             }
-            .padding(.trailing, 28)
+            .padding(.trailing, 34)
         }
         .frame(height: model.notchH)
     }
