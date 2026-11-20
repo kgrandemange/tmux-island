@@ -111,9 +111,12 @@ struct IslandView: View {
         HStack(spacing: 0) {
             // Aile gauche : présence de tmux (toujours visible) + nombre de sessions
             HStack(spacing: 5) {
-                Image(systemName: model.focusMode ? "moon.fill" : "terminal").font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0)
-                                     : store.tmuxRunning ? Color.white.opacity(0.55) : Color.white.opacity(0.2))
+                if model.focusMode {
+                    Image(systemName: "moon.fill").font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.68, green: 0.55, blue: 1.0))
+                } else {
+                    PaneGlyph(strength: store.tmuxRunning ? 0.75 : 0.3)
+                }
                 if store.tmuxRunning {
                     Text("\(store.sessions.count)").font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.45))
@@ -163,7 +166,7 @@ struct IslandView: View {
     private var header: some View {
         HStack {
             HStack(spacing: 8) {
-                Image(systemName: "terminal").foregroundStyle(.secondary)
+                PaneGlyph(strength: 0.8)
                 Text("tmux").font(.system(size: 12, weight: .semibold))
                 summaryPills
             }
@@ -495,6 +498,24 @@ struct FlowChips: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Logo tmux : quatre « panes » dont un actif (plus clair). Remplace l'icône de terminal générique.
+struct PaneGlyph: View {
+    var strength: Double = 1
+
+    var body: some View {
+        VStack(spacing: 2) {
+            HStack(spacing: 2) { pane(active: true); pane(active: false) }
+            HStack(spacing: 2) { pane(active: false); pane(active: false) }
+        }
+        .frame(width: 14, height: 11)
+        .accessibilityLabel("tmux")
+    }
+
+    private func pane(active: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 1.5).fill(Color.white.opacity((active ? 0.85 : 0.32) * strength))
     }
 }
 
