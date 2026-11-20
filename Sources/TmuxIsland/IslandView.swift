@@ -75,15 +75,11 @@ struct IslandView: View {
 
     private var compact: some View {
         HStack(spacing: 0) {
-            // Aile gauche : présence (toujours visible) + agents en cours
+            // Aile gauche : présence de tmux (toujours visible) + nombre de sessions
             HStack(spacing: 5) {
                 Image(systemName: "terminal").font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(store.tmuxRunning ? Color.white.opacity(0.55) : Color.white.opacity(0.2))
-                if store.workingCount > 0 {
-                    PulsingDot(color: AgentState.working.color)
-                    Text("\(store.workingCount)").font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(AgentState.working.color)
-                } else if store.tmuxRunning {
+                if store.tmuxRunning {
                     Text("\(store.sessions.count)").font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.45))
                 }
@@ -91,14 +87,17 @@ struct IslandView: View {
             .frame(width: model.wing, alignment: .trailing)
             .padding(.trailing, 6)
             Spacer(minLength: 0).frame(width: model.notchW - 12)
-            // Aile droite : à traiter, sinon nombre d'agents inactifs
-            HStack(spacing: 6) {
-                if store.waitingCount > 0 { Badge(count: store.waitingCount, color: AgentState.waiting.color, pulse: true) }
-                if store.doneCount > 0 { Badge(count: store.doneCount, color: AgentState.done.color, pulse: true) }
-                if store.waitingCount == 0 && store.doneCount == 0 {
-                    Circle().fill(AgentState.idle.color).frame(width: 6, height: 6)
-                    Text("\(store.agents.count)").font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.45))
+            // Aile droite : un point par agent, trié par urgence (rouge, vert, orange, gris)
+            HStack(spacing: 4) {
+                if store.agents.isEmpty {
+                    Circle().stroke(Color.white.opacity(0.25), lineWidth: 1).frame(width: 7, height: 7)
+                } else {
+                    let maxDots = store.agents.count > 6 ? 5 : 6
+                    ForEach(store.agents.prefix(maxDots)) { AgentDot(state: $0.state) }
+                    if store.agents.count > 6 {
+                        Text("+\(store.agents.count - 5)").font(.system(size: 9, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
                 }
             }
             .frame(width: model.wing, alignment: .leading)
@@ -315,6 +314,23 @@ struct PulsingDot: View {
             .scaleEffect(on ? 1.0 : 0.6).opacity(on ? 1 : 0.55)
             .onAppear { withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) { on = true } }
     }
+}
+
+/// Point de l'aile compacte : respire quand l'agent travaille, bat plus fort quand il faut agir.
+struct AgentDot: View {
+    let state: AgentState
+    @State private var on = false
+    var body: some View {
+        Circle().fill(state.color).frame(width: 7, height: 7)
+            .scaleEffect(animated ? (on ? 1.25 : 0.75) : 1)
+            .opacity(state == .working ? (on ? 1 : 0.5) : 1)
+            .shadow(color: state.needsAttention ? state.color.opacity(0.8) : .clear, radius: 3)
+            .onAppear {
+                guard animated else { return }
+                withAnimation(.easeInOut(duration: state == .working ? 0.9 : 0.6).repeatForever(autoreverses: true)) { on = true }
+            }
+    }
+    private var animated: Bool { state != .idle }
 }
 
 struct Badge: View {
