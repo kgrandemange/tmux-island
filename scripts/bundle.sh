@@ -12,7 +12,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>TmuxIsland</string>
-  <key>CFBundleIdentifier</key><string>dev.kevin.tmux-island</string>
+  <key>CFBundleIdentifier</key><string>io.github.kgrandemange.tmux-island</string>
   <key>CFBundleExecutable</key><string>TmuxIsland</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$version</string>

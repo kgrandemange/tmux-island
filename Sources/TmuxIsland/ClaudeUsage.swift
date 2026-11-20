@@ -89,7 +89,7 @@ enum ClaudeUsage {
     }
 
     /// La taille de fenêtre n'est pas écrite dans le transcript : heuristique sur le nom du modèle,
-    /// ajustable avec `defaults write dev.kevin.tmux-island contextWindow -int 200000`.
+    /// ajustable avec `defaults write io.github.kgrandemange.tmux-island contextWindow -int 200000`.
     static func window(for model: String) -> Int {
         if let o = UserDefaults.standard.object(forKey: "contextWindow") as? Int, o > 0 { return o }
         let m = model.lowercased()
