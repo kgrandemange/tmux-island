@@ -22,8 +22,7 @@ sur le tty ; autres terminaux : activation de l'app).
 - **Valider (↵)** une demande de permission et **répondre** depuis l'île sans changer de fenêtre (`tmux send-keys`).
 - **Auto-acquittement** : un « terminé » disparaît quand tu regardes déjà le pane.
 - **Suivre l'écran actif** (menu, désactivé par défaut) : l'île se pose sur l'écran où se trouve le curseur
-  et les alertes s'y affichent ; sinon elle reste sur la notch et une bannière prévient sur l'écran où tu travailles
-  (non testé avec plusieurs écrans).
+  et les alertes s'y affichent ; sinon elle reste sur la notch et une bannière prévient sur l'écran où tu travailles.
 - **Saut robuste, tous terminaux** : le client tmux déjà affiché sur la session cible est préféré ; si la session
   n'est affichée nulle part, un terminal s'ouvre et s'y attache (le dernier terminal utilisé, sinon WezTerm, Ghostty,
   iTerm2, kitty, Alacritty ou Terminal.app). Testé avec WezTerm ; les autres commandes sont couvertes par des tests unitaires.
