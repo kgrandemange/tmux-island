@@ -1,14 +1,16 @@
 import AppKit
 import Carbon
 import Combine
+import ServiceManagement
 import SwiftUI
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let store = AgentStore()
     private var controller: IslandController!
     private var statusItem: NSStatusItem!
     private var focusItem: NSMenuItem!
+    private var loginItem: NSMenuItem!
     private var focusSub: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -47,6 +49,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         focusItem.state = controller.model.focusMode ? .on : .off
         focusSub = controller.model.$focusMode.sink { [weak self] on in self?.focusItem.state = on ? .on : .off }
         menu.addItem(.separator())
+        loginItem = menu.addItem(withTitle: "Lancer à la connexion", action: #selector(toggleLogin), keyEquivalent: "")
+        loginItem.target = self
+        menu.delegate = self
         menu.addItem(withTitle: "Ouvrir le dossier des états", action: #selector(openState), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quitter", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -54,6 +59,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func toggle() { controller.toggle() }
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+    }
+
+    @objc private func toggleLogin() {
+        do {
+            if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() }
+            else { try SMAppService.mainApp.register() }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "Impossible de modifier le lancement à la connexion"
+            alert.informativeText = "\(error.localizedDescription)\n\nInstalle d'abord l'app avec scripts/install.sh (elle doit se trouver dans ~/Applications)."
+            alert.runModal()
+        }
+    }
+
     @objc private func toggleFocus() { controller.toggleFocus() }
     @objc private func next() { controller.jumpToNextAttention() }
     @objc private func openState() {
@@ -81,6 +102,22 @@ if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLi
             try? png.write(to: URL(fileURLWithPath: out))
             print("snapshot \(img.size)")
         }
+    }
+    exit(0)
+}
+
+// Options en ligne de commande pour les scripts : --login-status | --enable-login | --disable-login
+if let flag = CommandLine.arguments.first(where: { ["--login-status", "--enable-login", "--disable-login"].contains($0) }) {
+    do {
+        if flag == "--enable-login" { try SMAppService.mainApp.register() }
+        if flag == "--disable-login" { try SMAppService.mainApp.unregister() }
+    } catch { print("erreur: \(error.localizedDescription)"); exit(1) }
+    switch SMAppService.mainApp.status {
+    case .enabled: print("enabled")
+    case .requiresApproval: print("requiresApproval")
+    case .notRegistered: print("notRegistered")
+    case .notFound: print("notFound")
+    @unknown default: print("unknown")
     }
     exit(0)
 }

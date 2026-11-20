@@ -28,10 +28,14 @@ sur le tty ; autres terminaux : activation de l'app).
 ## Installation
 
 ```bash
-./scripts/bundle.sh            # construit build/TmuxIsland.app
-open build/TmuxIsland.app      # agent de barre de menus, pas d'icône Dock
+./scripts/install.sh                # construit, installe dans ~/Applications et lance (agent de barre de menus)
+./scripts/install.sh --login        # idem + lancement automatique à la connexion
 ./scripts/install-claude-hooks.sh   # (recommandé) hooks précis pour Claude Code, sauvegarde settings.json
 ```
+
+Le lancement à la connexion se règle aussi depuis le menu de la barre de menus (« Lancer à la connexion »).
+L'app doit être installée dans `~/Applications` (c'est ce que fait `install.sh`) pour que l'élément de connexion reste valide.
+`./scripts/bundle.sh` construit seulement `build/TmuxIsland.app`.
 
 Sans hooks, l'app fonctionne déjà par heuristique (processus + contenu de l'écran : `esc to interrupt`,
 `Do you want to…`). Les hooks rendent « terminé / en attente » instantanés et fiables.
