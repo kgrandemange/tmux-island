@@ -58,23 +58,53 @@ private struct HeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
+/// Apparition du contenu déplié : fondu + léger flou + glissement de quelques pixels.
+private struct BlurReveal: ViewModifier {
+    var amount: Double   // 1 = caché, 0 = visible
+    func body(content: Content) -> some View {
+        content.opacity(1 - amount).blur(radius: 6 * amount).offset(y: -8 * amount)
+    }
+}
+
+extension AnyTransition {
+    static func blurReveal(in inAnimation: Animation, out outAnimation: Animation) -> AnyTransition {
+        .asymmetric(
+            insertion: AnyTransition.modifier(active: BlurReveal(amount: 1), identity: BlurReveal(amount: 0)).animation(inAnimation),
+            removal: AnyTransition.modifier(active: BlurReveal(amount: 1), identity: BlurReveal(amount: 0)).animation(outAnimation))
+    }
+}
+
 struct IslandView: View {
     @ObservedObject var store: AgentStore
     @ObservedObject var model: IslandModel
     @ObservedObject private var shortcuts = ShortcutStore.shared
 
+    /// Hauteur de la forme : de la notch à la hauteur du contenu, animée avec la largeur (« morph »).
+    private var islandHeight: CGFloat? {
+        if model.naturalHeight { return nil }
+        return model.expanded ? max(model.contentHeight, model.notchH + 60) : model.notchH
+    }
+
     var body: some View {
         let w = model.expanded ? model.expandedW : model.compactW
         ZStack(alignment: .top) {
-            Group {
-                if model.expanded { expanded } else { compact }
+            ZStack(alignment: .top) {
+                if model.expanded {
+                    expanded
+                        .background(GeometryReader { g in Color.clear.preference(key: HeightKey.self, value: g.size.height) })
+                        .transition(.blurReveal(in: .easeOut(duration: 0.30).delay(0.14), out: .easeIn(duration: 0.12)))
+                } else {
+                    compact
+                        .transition(.asymmetric(insertion: AnyTransition.opacity.animation(.easeOut(duration: 0.15).delay(0.12)),
+                                                removal: AnyTransition.opacity.animation(.easeIn(duration: 0.10))))
+                }
             }
             .foregroundStyle(.white)
             .environment(\.colorScheme, .dark)
-            .frame(width: w)
-            .background(GeometryReader { g in Color.clear.preference(key: HeightKey.self, value: g.size.height) })
+            .frame(width: w, height: islandHeight, alignment: .top)
             .background(NotchShape(topR: model.expanded ? 18 : 6, botR: model.expanded ? 26 : 12).fill(Color.black))
             .clipShape(NotchShape(topR: model.expanded ? 18 : 6, botR: model.expanded ? 26 : 12))
+            .animation(.easeOut(duration: 0.22), value: model.contentHeight)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .coordinateSpace(name: "island")

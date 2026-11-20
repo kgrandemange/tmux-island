@@ -156,6 +156,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--demo-images"), i + 1 < Comman
         @MainActor func model(expanded: Bool) -> IslandModel {
             let m = IslandModel()
             m.expanded = expanded
+            m.naturalHeight = true
             m.notchH = 32
             m.notchW = 190
             return m
@@ -196,6 +197,7 @@ if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLi
     MainActor.assumeIsolated {
         let store = AgentStore()
         let model = IslandModel()
+        model.naturalHeight = true
         model.expanded = true
         model.historyOpen = true
         store.start()

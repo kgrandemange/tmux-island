@@ -5,7 +5,11 @@ import SwiftUI
 @MainActor
 final class IslandModel: ObservableObject {
     @Published var expanded = false
-    @Published var contentHeight: CGFloat = 0
+    /// Hauteur naturelle du contenu déplié (mesurée) : sert à animer la hauteur de l'île de la notch jusqu'ici.
+    /// Valeur de départ = estimation, corrigée dès la première mesure.
+    @Published var contentHeight: CGFloat = 300
+    /// Captures hors écran (ImageRenderer) : la hauteur suit le contenu sans être animée.
+    var naturalHeight = false
     @Published var flashPane: String?
     /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
     @Published var toast: Agent?
@@ -211,28 +215,27 @@ final class IslandController: NSObject {
         guard model.expanded != value else { return }
         if !value { model.resetHover() }
         if value { model.toast = nil }
-        withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { model.expanded = value }
+        // Ouverture souple avec un léger rebond ; fermeture plus rapide et calme, sans rebond.
+        let curve: Animation = value ? .timingCurve(0.34, 1.38, 0.5, 1, duration: 0.52)
+                                     : .timingCurve(0.4, 0, 0.2, 1, duration: 0.26)
+        withAnimation(curve) { model.expanded = value }
         updateFrame(animated: true)
     }
 
     /// Debug : joue un survol dans la vraie fenêtre et enregistre le contenu image par image.
     func debugAnimTest(dir: String) {
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        setExpanded(true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [self] in
-            let target = store.visibleAgents.max(by: { $0.screen.count < $1.screen.count })
-            var n = 0
-            Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { [self] t in
-                if n == 5 { model.setHoveredRow(target?.id) }
-                if n == 70 { model.setHoveredRow(nil) }
-                if let v = panel.contentView, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
-                    v.cacheDisplay(in: v.bounds, to: rep)
-                    let name = String(format: "%@/f%03d_w%dx%d.png", dir, n, Int(panel.frame.width), Int(panel.frame.height))
-                    try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: name))
-                }
-                n += 1
-                if n > 110 { t.invalidate() }
+        var n = 0
+        Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [self] t in
+            if n == 10 { setExpanded(true) }
+            if n == 40 { setExpanded(false) }
+            if let v = panel.contentView, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
+                v.cacheDisplay(in: v.bounds, to: rep)
+                let name = String(format: "%@/f%03d.png", dir, n)
+                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: name))
             }
+            n += 1
+            if n > 80 { t.invalidate() }
         }
     }
 
