@@ -173,3 +173,40 @@ final class AgentDetectionTests: XCTestCase {
         XCTAssertNil(ProcessTable.agentKind(of: "vim claude-notes.md"))
     }
 }
+
+final class TerminalLauncherTests: XCTestCase {
+    private let argv = ["/opt/homebrew/bin/tmux", "attach-session", "-t", "=my session"]
+
+    func testWezTermLaunchesANewInstance() {
+        XCTAssertEqual(TerminalLauncher.launch(bundleID: "com.github.wez.wezterm", argv: argv),
+                       .process("/usr/bin/open", ["-n", "-b", "com.github.wez.wezterm", "--args", "start", "--"] + argv))
+    }
+
+    func testGhosttyAndAlacrittyUseDashE() {
+        for id in ["com.mitchellh.ghostty", "org.alacritty"] {
+            XCTAssertEqual(TerminalLauncher.launch(bundleID: id, argv: argv),
+                           .process("/usr/bin/open", ["-n", "-b", id, "--args", "-e"] + argv))
+        }
+    }
+
+    func testTerminalAppIsTheFallbackAndQuotesTheCommand() {
+        guard case let .appleScript(src) = TerminalLauncher.launch(bundleID: "unknown.app", argv: argv) else {
+            return XCTFail("AppleScript attendu")
+        }
+        XCTAssertTrue(src.contains("tell application \"Terminal\""))
+        XCTAssertTrue(src.contains("'=my session'"), "les arguments avec espace doivent être protégés")
+    }
+
+    func testITermScript() {
+        guard case let .appleScript(src) = TerminalLauncher.launch(bundleID: "com.googlecode.iterm2", argv: argv) else {
+            return XCTFail("AppleScript attendu")
+        }
+        XCTAssertTrue(src.contains("create window with default profile command"))
+    }
+
+    func testShellQuoting() {
+        XCTAssertEqual(TerminalLauncher.shellQuote("=abc"), "=abc")
+        XCTAssertEqual(TerminalLauncher.shellQuote("it's"), "'it'\\''s'")
+        XCTAssertEqual(TerminalLauncher.appleScriptEscape("a\"b\\c"), "a\\\"b\\\\c")
+    }
+}

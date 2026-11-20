@@ -5,10 +5,18 @@ import Foundation
 enum FocusService {
     static func jump(to pane: Pane) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let client = TmuxService.listClients(server: pane.server).max(by: { $0.activity < $1.activity })
+            let clients = TmuxService.listClients(server: pane.server)
             TmuxService.run(["select-window", "-t", "=\(pane.session):\(pane.windowIndex)"], server: pane.server)
             TmuxService.run(["select-pane", "-t", pane.tmuxID], server: pane.server)
-            if let client {
+            // Client déjà affiché sur cette session en priorité (inutile de déplacer un autre terminal), sinon le plus récent.
+            let client = clients.filter { $0.session == pane.session }.max(by: { $0.activity < $1.activity })
+                ?? clients.max(by: { $0.activity < $1.activity })
+            guard let client else {
+                // Session détachée : on ouvre un terminal qui s'y attache.
+                TerminalLauncher.attach(session: pane.session, server: pane.server)
+                return
+            }
+            if client.session != pane.session {
                 TmuxService.run(["switch-client", "-c", client.tty, "-t", "=\(pane.session)"], server: pane.server)
             }
             activateTerminal(for: client)
@@ -45,6 +53,7 @@ enum FocusService {
             bundleID = known.first { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }
         }
         guard let bundleID else { return }
+        UserDefaults.standard.set(bundleID, forKey: "lastTerminalBundle")
 
         // Sélection du bon onglet quand le terminal l'expose.
         if let tty = client?.tty {

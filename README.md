@@ -19,6 +19,9 @@ sur le tty ; autres terminaux : activation de l'app).
 - **Suivre l'écran actif** (menu, désactivé par défaut) : l'île se pose sur l'écran où se trouve le curseur
   et les alertes s'y affichent ; sinon elle reste sur la notch et une bannière prévient sur l'écran où tu travailles
   (non testé avec plusieurs écrans).
+- **Saut robuste, tous terminaux** : le client tmux déjà affiché sur la session cible est préféré ; si la session
+  n'est affichée nulle part, un terminal s'ouvre et s'y attache (le dernier terminal utilisé, sinon WezTerm, Ghostty,
+  iTerm2, kitty, Alacritty ou Terminal.app). Testé avec WezTerm ; les autres commandes sont couvertes par des tests unitaires.
 - **Plusieurs serveurs tmux** : le serveur par défaut et les autres sockets (`tmux -L nom`, `-S chemin`) sont
   tous pris en compte ; les sessions d'un serveur secondaire sont suffixées par le nom du socket.
 - **Sessions** : toutes tes sessions/fenêtres tmux en chips cliquables (pastille d'état si un agent y tourne).
