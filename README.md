@@ -80,11 +80,40 @@ iTerm2, kitty, Alacritty, Terminal.app…), whether your sessions are local, lon
 
 ## Installation
 
-Requirements: macOS 14 or later, tmux 3.x. To build from source: the Xcode command line tools
-(`xcode-select --install`).
+Requirements: **macOS 14 or later on Apple Silicon (M1 or newer)**, tmux 3.x. Intel Macs are not supported for now.
+
+### Homebrew (recommended)
 
 ```bash
-git clone <this repository> && cd tmux-island
+brew install --cask kgrandemange/tap/tmuxisland
+```
+
+Homebrew verifies the SHA-256 of the download and removes the quarantine flag, so there is no first-launch prompt.
+Update with `brew upgrade --cask tmuxisland`.
+
+### Manual download
+
+1. Download [`TmuxIsland.zip`](https://github.com/kgrandemange/tmux-island-site/releases/latest/download/TmuxIsland.zip) and unzip it.
+2. Drag **TmuxIsland.app** into Applications.
+3. **First launch only**: right-click the app › **Open** › **Open**. On macOS 15 or later, if the app is blocked:
+   System Settings › Privacy & Security › **Open Anyway**.
+
+To verify the download: `shasum -a 256 TmuxIsland.zip` must match the checksum published with the
+[release](https://github.com/kgrandemange/tmux-island-site/releases).
+
+### Why the first-launch warning, and why Apple Silicon only?
+
+- **Notarization.** For macOS to open an app without any prompt, Apple requires it to be *notarized*, which needs a paid
+  developer account (99 USD a year). TmuxIsland is a free tool, so I don't pay for that: the app is signed "ad hoc" and
+  macOS asks for confirmation once. The code contains no networking calls, and the SHA-256 lets you check your download.
+- **Apple Silicon only.** The app is built for arm64 (M1 and later). Supporting Intel would need a universal build; it
+  isn't planned for now.
+
+### From source (maintainer)
+
+TmuxIsland is not open source; the source repository is private. For the maintainer:
+
+```bash
 ./scripts/install.sh            # builds, installs into ~/Applications and launches
 ./scripts/install.sh --login    # same + launch automatically at login
 ```
@@ -93,14 +122,16 @@ TmuxIsland is a menu bar agent: no Dock icon. The menu of its icon gives access 
 **Settings…** (`⌘,`), focus mode and launch at login.
 
 <details>
-<summary><b>Ready-to-distribute archive (<code>.zip</code>)</b></summary>
+<summary><b>Publishing a release (maintainer)</b></summary>
 
 ```bash
-./scripts/package.sh            # build/TmuxIsland-<version>.zip + SHA-256 checksum
+./scripts/package.sh            # build/release/TmuxIsland.zip + TmuxIsland.zip.sha256
 ```
 
-The app is ad-hoc signed (no Apple developer account): on first launch, **right-click › Open**
-(or `xattr -dr com.apple.quarantine TmuxIsland.app`).
+The archive is arm64 only, stripped of symbols (function names are no longer readable in the binary) and ad-hoc signed.
+`package.sh` refuses to build if the binary contains a personal path. Upload the zip and the checksum to a GitHub
+release of the public `tmux-island-site` repository (tag `vX.Y.Z`), then bump `version` and `sha256` in the Homebrew
+cask of `kgrandemange/homebrew-tap`.
 </details>
 
 ### Hooks (optional)

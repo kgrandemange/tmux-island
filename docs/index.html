@@ -55,10 +55,10 @@
   <h1><span data-en="The Dynamic Island for">La Dynamic Island de</span> <span class="grad" data-en="your tmux.">ton tmux.</span></h1>
   <p class="lead" data-en="Know which AI agent finished or needs your approval, and jump to the right pane in one click. Nothing to hunt for, nothing to configure.">Sache quel agent IA a fini ou attend ta validation, et va sur le bon pane en un clic. Rien à chercher, rien à configurer.</p>
   <div class="cta">
-    <span class="btn primary" aria-disabled="true"><span data-en="Download — coming soon">Télécharger — bientôt</span></span>
-    <a class="btn" href="#tmux" data-en="See how it works with tmux">Voir le couplage avec tmux</a>
+    <a class="btn primary" href="https://github.com/kgrandemange/tmux-island-site/releases/latest/download/TmuxIsland.zip" data-en="Download for macOS">Télécharger pour macOS</a>
+    <a class="btn" href="#install" data-en="Other ways to install">Autres façons d'installer</a>
   </div>
-  <p class="meta" data-en="macOS 14+ · tmux 3.x · everything stays on your Mac">macOS 14+ · tmux 3.x · tout reste sur ton Mac</p>
+  <p class="meta" data-en="macOS 14+ · Apple Silicon · tmux 3.x · free · everything stays on your Mac">macOS 14+ · Apple Silicon · tmux 3.x · gratuit · tout reste sur ton Mac</p>
 
   <!-- Vidéo de démonstration (scène : docs/video.html) -->
   <figure class="video-frame">
@@ -196,24 +196,45 @@
     <div class="reveal">
       <span class="eyebrow" data-en="Install">Installation</span>
       <h2 data-en="Up and running in a minute.">Prêt en une minute.</h2>
+      <p class="sub" data-en="Two ways: Homebrew (one command, no warning) or a manual download.">Deux façons : Homebrew (une commande, sans avertissement) ou un téléchargement manuel.</p>
     </div>
     <div class="install">
-      <div class="card codebox reveal">
-        <div class="copy"><button type="button" data-en="Copy">Copier</button></div>
-<pre><span class="c" data-en="# build, install in ~/Applications, launch"># construit, installe dans ~/Applications, lance</span>
-<span class="k">$</span> ./scripts/install.sh
-
-<span class="c" data-en="# …and start at login"># …et lance à la connexion</span>
-<span class="k">$</span> ./scripts/install.sh --login</pre>
+      <div>
+        <h3 class="inst-h" data-en="With Homebrew">Avec Homebrew</h3>
+        <div class="card codebox reveal">
+          <div class="copy"><button type="button" data-en="Copy">Copier</button></div>
+<pre><span class="k">$</span> brew install --cask kgrandemange/tap/tmuxisland</pre>
+        </div>
+        <p class="inst-note" data-en="Homebrew checks the download's SHA-256 and takes care of the first-launch prompt. Update with <code>brew upgrade --cask tmuxisland</code>.">Homebrew vérifie l'empreinte SHA-256 du téléchargement et s'occupe de l'avertissement du premier lancement. Mise à jour avec <code>brew upgrade --cask tmuxisland</code>.</p>
       </div>
+      <div>
+        <h3 class="inst-h" data-en="Manual download">Téléchargement manuel</h3>
+        <ol class="card steps-list reveal">
+          <li data-en="Download <a href='https://github.com/kgrandemange/tmux-island-site/releases/latest/download/TmuxIsland.zip'>TmuxIsland.zip</a> and unzip it."><a href="https://github.com/kgrandemange/tmux-island-site/releases/latest/download/TmuxIsland.zip">TmuxIsland.zip</a> : télécharge-le et décompresse-le.</li>
+          <li data-en="Drag <b>TmuxIsland.app</b> into your Applications folder.">Glisse <b>TmuxIsland.app</b> dans ton dossier Applications.</li>
+          <li data-en="<b>First launch only:</b> right-click the app › <b>Open</b> › <b>Open</b>. On macOS 15 or later, if the app is blocked: System Settings › Privacy &amp; Security › <b>Open Anyway</b>."><b>Une seule fois, au premier lancement :</b> clic droit sur l'app › <b>Ouvrir</b> › <b>Ouvrir</b>. Sur macOS 15 ou plus, si l'app est bloquée : Réglages Système › Confidentialité et sécurité › <b>Ouvrir quand même</b>.</li>
+          <li data-en="The icon appears in the menu bar and the island settles on your notch (or at the top of the screen).">L'icône apparaît dans la barre de menus et l'île se place sur ta notch (ou en haut de l'écran).</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="install" style="margin-top:22px">
       <ul class="card reqs reveal">
         <li data-en="<b>macOS 14</b> or later (a notch is optional: without one, it's a pill)"><b>macOS 14</b> ou plus récent (la notch est facultative : sans elle, c'est une pilule)</li>
+        <li data-en="<b>Apple Silicon</b> (M1 or later). Intel Macs aren't supported for now."><b>Apple Silicon</b> (M1 et suivants). Les Mac Intel ne sont pas pris en charge pour l'instant.</li>
         <li data-en="<b>tmux 3.x</b>"><b>tmux 3.x</b></li>
-        <li data-en="<b>Xcode command line tools</b> to build from source"><b>Outils en ligne de commande Xcode</b> pour construire depuis les sources</li>
         <li data-en="<b>No account, no network.</b> Optional hooks for Claude Code and Codex."><b>Aucun compte, aucun réseau.</b> Hooks facultatifs pour Claude Code et Codex.</li>
       </ul>
+      <div class="card note reveal">
+        <h3 data-en="Why the warning at first launch?">Pourquoi cet avertissement au premier lancement ?</h3>
+        <p data-en="TmuxIsland is free and its source code is not public. For macOS to open an app without any prompt, Apple requires it to be <i>notarized</i>, which needs a paid developer account (99 USD a year). I don't pay to publish a free tool, so the app is signed &quot;ad hoc&quot; and macOS asks you to confirm once. Nothing is hidden: you can check your download's fingerprint below, and the app contains no networking code.">TmuxIsland est gratuit et son code source n'est pas public. Pour que macOS ouvre une app sans aucun message, Apple exige qu'elle soit <i>notarisée</i>, ce qui demande un compte développeur payant (99 $ par an). Je ne paie pas pour publier un outil gratuit : l'app est donc signée « ad hoc » et macOS te demande de confirmer une fois. Rien n'est caché : tu peux vérifier l'empreinte de ton téléchargement ci-dessous, et l'app ne contient aucun code réseau.</p>
+        <div class="codebox" style="margin-top:14px">
+<pre><span class="k">$</span> shasum -a 256 TmuxIsland.zip
+<span class="c" data-en="# must match the value published with the download">Doit correspondre à la valeur publiée avec le téléchargement</span></pre>
+        </div>
+        <p class="inst-note"><a href="https://github.com/kgrandemange/tmux-island-site/releases" data-en="Releases and checksums (SHA-256)">Versions et empreintes (SHA-256)</a></p>
+      </div>
     </div>
-    <p class="soon reveal" style="color:var(--muted)" data-en="A ready-to-use download is coming soon. For now, distribution is private.">Une archive prête à l'emploi arrive bientôt. Pour l'instant, la distribution est privée.</p>
   </div>
 </section>
 
@@ -232,6 +253,12 @@
         <p data-en="Claude Code is first-class (official status, context gauge, approval buttons). Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent and Goose are detected through the process and the pane's screen.">Claude Code est pris en charge en priorité (statut officiel, jauge de contexte, boutons de validation). Codex, Gemini CLI, OpenCode, Aider, Amp, Cursor Agent et Goose sont détectés via le processus et l'écran du pane.</p></details>
       <details><summary data-en="What about a Mac without a notch?">Et sur un Mac sans notch ?</summary>
         <p data-en="The island becomes a pill centered at the top of the screen. With several displays, an option makes it follow your cursor.">L'île devient une pilule centrée en haut de l'écran. Avec plusieurs écrans, une option la fait suivre ton curseur.</p></details>
+      <details><summary data-en="Why does macOS block the app the first time?">Pourquoi macOS bloque l'app la première fois ?</summary>
+        <p data-en="Because it isn't notarized by Apple (that needs a paid developer account, and this tool is free). Confirm once with right-click › Open, or install it with Homebrew, which handles it for you. Then it opens normally.">Parce qu'elle n'est pas notarisée par Apple (il faut un compte développeur payant, et cet outil est gratuit). Confirme une fois avec clic droit › Ouvrir, ou installe-la avec Homebrew, qui s'en occupe. Ensuite elle s'ouvre normalement.</p></details>
+      <details><summary data-en="Why Apple Silicon only?">Pourquoi seulement Apple Silicon ?</summary>
+        <p data-en="The app is built for M1 and later chips. Intel Macs aren't supported for now.">L'app est compilée pour les puces M1 et suivantes. Les Mac Intel ne sont pas pris en charge pour l'instant.</p></details>
+      <details><summary data-en="Can I trust a download whose code I can't read?">Puis-je faire confiance à un téléchargement dont je ne peux pas lire le code ?</summary>
+        <p data-en="The code isn't public, so you can't audit it, but you can observe it: the app contains no networking code (a firewall like Little Snitch or LuLu will show it never connects anywhere), and you can verify the download's SHA-256 against the published one.">Le code n'est pas public, tu ne peux donc pas l'auditer, mais tu peux l'observer : l'app ne contient aucun code réseau (un pare-feu applicatif comme Little Snitch ou LuLu montrera qu'elle ne se connecte nulle part), et tu peux vérifier l'empreinte SHA-256 du téléchargement.</p></details>
       <details><summary data-en="Why free but not open source?">Pourquoi gratuit mais pas open source ?</summary>
         <p data-en="TmuxIsland is free to use. The source isn't public: the license forbids modification and redistribution.">TmuxIsland est gratuit à utiliser. Le code source n'est pas public : la licence interdit la modification et la redistribution.</p></details>
     </div>
