@@ -20,6 +20,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.controller.setExpanded(false)
         }
         store.start()
+        if let i = CommandLine.arguments.firstIndex(of: "--animtest"), i + 1 < CommandLine.arguments.count {
+            controller.debugAnimTest(dir: CommandLine.arguments[i + 1])
+        }
 
         // ⌃⌥Space : ouvrir/fermer l'île — ⌃⌥J : aller directement au prochain agent à traiter
         let mods = UInt32(controlKey | optionKey)
@@ -69,7 +72,8 @@ if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLi
         model.historyOpen = true
         store.start()
         RunLoop.main.run(until: Date().addingTimeInterval(2.5))
-        model.hoveredPane = store.visibleAgents.first?.id
+        let hi = Int(ProcessInfo.processInfo.environment["HOVER_INDEX"] ?? "0") ?? 0
+        model.hoveredPane = store.visibleAgents.indices.contains(hi) ? store.visibleAgents[hi].id : nil
         let renderer = ImageRenderer(content: IslandView(store: store, model: model).frame(width: model.expandedW).fixedSize(horizontal: false, vertical: true).background(Color(white: 0.5)))
         renderer.scale = 2
         if let img = renderer.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),

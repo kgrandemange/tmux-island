@@ -44,6 +44,13 @@ struct NotchShape: Shape {
     }
 }
 
+struct RowFramesKey: PreferenceKey {
+    static var defaultValue: [String: CGRect] = [:]
+    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
 private struct HeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
@@ -67,7 +74,9 @@ struct IslandView: View {
             .clipShape(NotchShape(topR: model.expanded ? 18 : 6, botR: model.expanded ? 26 : 12))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .coordinateSpace(name: "island")
         .onPreferenceChange(HeightKey.self) { h in if model.expanded { model.contentHeight = h } }
+        .onPreferenceChange(RowFramesKey.self) { model.rowFrames = $0 }
         .preferredColorScheme(.dark)
     }
 
@@ -264,7 +273,7 @@ struct AgentRow: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 0) {
             HStack(spacing: 10) {
                 StateDot(state: agent.state)
                 VStack(alignment: .leading, spacing: 3) {
@@ -295,28 +304,25 @@ struct AgentRow: View {
                 }
                 if index <= 9 { KeyCap(text: "\(index)") }
             }
-            if model.hoveredPane == agent.id, !agent.screen.isEmpty {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(Array(agent.screen.enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.72)).lineLimit(1).truncationMode(.tail)
+            if !agent.screen.isEmpty {
+                Reveal(open: model.hoveredPane == agent.id) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        ForEach(Array(agent.screen.enumerated()), id: \.offset) { _, line in
+                            Text(line).font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.72)).lineLimit(1).truncationMode(.tail)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.06)))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 10).padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.06)))
-                // Le texte n'apparaît qu'une fois la place faite (sinon il se superpose aux sections qui glissent)
-                // et disparaît tout de suite à la fermeture.
-                .transition(.asymmetric(
-                    insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.14)),
-                    removal: .opacity.animation(.easeOut(duration: 0.05))))
-                .clipped()
             }
             if replying {
                 TextField("Réponse rapide (↵ pour envoyer)", text: $reply)
                     .textFieldStyle(.plain).font(.system(size: 12))
                     .padding(.horizontal, 10).padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.1)))
+                    .padding(.top, 6)
                     .focused($focused)
                     .onSubmit {
                         guard !reply.isEmpty else { return }
@@ -334,10 +340,10 @@ struct AgentRow: View {
                     .stroke(flash ? agent.state.color : .clear, lineWidth: 1.5))
         )
         .contentShape(Rectangle())
-        .onHover { inside in
-            hover = inside
-            model.hover(agent.id, inside: inside)
-        }
+        .background(GeometryReader { g in
+            Color.clear.preference(key: RowFramesKey.self, value: [agent.id: g.frame(in: .named("island"))])
+        })
+        .onHover { hover = $0 }
         .onTapGesture { model.onJump?(agent) }
     }
 }
@@ -366,6 +372,32 @@ struct HistoryRow: View {
         .onHover { hover = $0 }
         .onTapGesture { if let pane { model.onJumpPane?(pane) } }
     }
+}
+
+/// Accordéon : la hauteur s'anime de 0 à la hauteur naturelle du contenu, qui est rogné pendant l'animation
+/// (pas de trou vide, pas de texte qui déborde sur les sections voisines).
+struct Reveal<Content: View>: View {
+    let open: Bool
+    @ViewBuilder let content: () -> Content
+    @State private var natural: CGFloat = 0
+    private let gap: CGFloat = 6
+
+    var body: some View {
+        content()
+            .fixedSize(horizontal: false, vertical: true)
+            .background(GeometryReader { g in Color.clear.preference(key: RevealHeightKey.self, value: g.size.height) })
+            .onPreferenceChange(RevealHeightKey.self) { natural = $0 }
+            .frame(height: open ? natural : 0, alignment: .top)
+            .clipped()
+            .opacity(open ? 1 : 0)
+            .padding(.top, open ? gap : 0)
+            .allowsHitTesting(false)
+    }
+}
+
+private struct RevealHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
 struct FlowChips: View {

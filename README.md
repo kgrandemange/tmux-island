@@ -32,7 +32,7 @@ Sans hooks, l'app fonctionne déjà par heuristique (processus + contenu de l'é
 
 Codex : dans `~/.codex/config.toml` → `notify = ["~/.local/bin/tmux-island-hook", "codex"]`.
 
-Debug : `.build/release/TmuxIsland --snapshot out.png` rend l'île dans un PNG.
+Debug : `.build/release/TmuxIsland --snapshot out.png` rend l'île dans un PNG ; `--animtest dir` enregistre image par image un survol dans la vraie fenêtre.
 
 ## Architecture
 

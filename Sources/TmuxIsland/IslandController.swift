@@ -12,19 +12,37 @@ final class IslandModel: ObservableObject {
     @Published var historyOpen = false
     /// Pane dont l'aperçu de l'écran est déplié (survol d'une ligne).
     @Published var hoveredPane: String?
+    /// Zones des lignes d'agents (coordonnées de l'île, origine en haut à gauche), publiées par la vue.
+    var rowFrames: [String: CGRect] = [:]
     private var hoverWork: DispatchWorkItem?
+    private var requestedRow: String?
 
-    func hover(_ id: String, inside: Bool) {
+    /// Le survol vient de la position réelle du curseur (pas de `onHover`, qui émet de faux
+    /// « sorti / entré » quand la fenêtre se redimensionne sous le curseur et fait boucler l'aperçu).
+    func setHoveredRow(_ id: String?) {
+        guard id != requestedRow else { return }
+        requestedRow = id
         hoverWork?.cancel()
-        if inside {
+        if let id {
+            if hoveredPane == id { return }
             let w = DispatchWorkItem { [weak self] in
                 withAnimation(.easeOut(duration: 0.2)) { self?.hoveredPane = id }
             }
             hoverWork = w
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: w)
-        } else if hoveredPane == id {
-            withAnimation(.easeOut(duration: 0.15)) { hoveredPane = nil }
+        } else if hoveredPane != nil {
+            let w = DispatchWorkItem { [weak self] in
+                withAnimation(.easeOut(duration: 0.15)) { self?.hoveredPane = nil }
+            }
+            hoverWork = w
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: w)
         }
+    }
+
+    func resetHover() {
+        hoverWork?.cancel()
+        requestedRow = nil
+        hoveredPane = nil
     }
     /// Mode concentration : plus de son, de toast ni de bannière — seuls les points d'état restent.
     @Published var focusMode = UserDefaults.standard.bool(forKey: "focusMode")
@@ -65,7 +83,6 @@ final class IslandController: NSObject {
     private var hovering = false
     private var expandWork: DispatchWorkItem?
     private var collapseWork: DispatchWorkItem?
-    private var shrinkWork: DispatchWorkItem?
 
     init(store: AgentStore) {
         self.store = store
@@ -107,6 +124,7 @@ final class IslandController: NSObject {
         panel.isMovable = false
         panel.acceptsMouseMovedEvents = true
         panel.hidesOnDeactivate = false
+        panel.ignoresMouseEvents = true
         panel.onKey = { [weak self] e in self?.handleKey(e) ?? false }
         let host = NSHostingView(rootView: IslandView(store: store, model: model))
         host.sizingOptions = []
@@ -129,23 +147,21 @@ final class IslandController: NSObject {
         panel.orderFrontRegardless()
     }
 
+    /// La fenêtre garde une taille FIXE (assez grande pour l'île dépliée) : la redimensionner pendant
+    /// l'animation décrochait l'île du haut de l'écran (une bande vide laissait voir le fond).
+    /// Seule la zone visible de l'île capte la souris (voir `ignoresMouseEvents`).
     private func updateFrame(animated: Bool) {
+        let h = min(820, screen.frame.height - 40)
+        let target = NSRect(x: screen.frame.midX - model.expandedW / 2, y: screen.frame.maxY - h,
+                            width: model.expandedW, height: h)
+        if panel.frame != target { panel.setFrame(target, display: true) }
+    }
+
+    /// Rectangle réellement dessiné par l'île (coordonnées écran), centré en haut de l'écran.
+    private func visibleRect() -> NSRect {
         let w = model.expanded ? model.expandedW : model.compactW
-        let h = model.expanded ? max(model.contentHeight, model.notchH + 90) : model.notchH
-        let target = NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h)
-        let cur = panel.frame
-        shrinkWork?.cancel()
-        if cur.width > w + 1 || cur.height > h + 1 {
-            // On rétrécit la fenêtre après l'animation SwiftUI pour ne pas rogner le contenu.
-            let work = DispatchWorkItem { [weak self] in self?.panel.setFrame(target, display: true) }
-            shrinkWork = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
-            // Mais on recentre/élargit tout de suite si nécessaire.
-            let union = cur.union(target)
-            if union != cur { panel.setFrame(NSRect(x: union.minX, y: target.maxY - union.height, width: union.width, height: union.height), display: true) }
-        } else {
-            panel.setFrame(target, display: true)
-        }
+        let h = model.expanded ? max(model.contentHeight, model.notchH + 60) : model.notchH
+        return NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h)
     }
 
     // MARK: - État
@@ -172,16 +188,31 @@ final class IslandController: NSObject {
 
     func setExpanded(_ value: Bool) {
         guard model.expanded != value else { return }
-        if !value { model.hoveredPane = nil }
-        if value { model.toast = nil; updateFrameForExpansion() }
+        if !value { model.resetHover() }
+        if value { model.toast = nil }
         withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) { model.expanded = value }
         updateFrame(animated: true)
     }
 
-    private func updateFrameForExpansion() {
-        // Fenêtre agrandie avant l'animation du contenu.
-        let w = model.expandedW, h = max(model.contentHeight, 220)
-        panel.setFrame(NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h), display: true)
+    /// Debug : joue un survol dans la vraie fenêtre et enregistre le contenu image par image.
+    func debugAnimTest(dir: String) {
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        setExpanded(true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [self] in
+            let target = store.visibleAgents.max(by: { $0.screen.count < $1.screen.count })
+            var n = 0
+            Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { [self] t in
+                if n == 5 { model.setHoveredRow(target?.id) }
+                if n == 70 { model.setHoveredRow(nil) }
+                if let v = panel.contentView, let rep = v.bitmapImageRepForCachingDisplay(in: v.bounds) {
+                    v.cacheDisplay(in: v.bounds, to: rep)
+                    let name = String(format: "%@/f%03d_w%dx%d.png", dir, n, Int(panel.frame.width), Int(panel.frame.height))
+                    try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: name))
+                }
+                n += 1
+                if n > 110 { t.invalidate() }
+            }
+        }
     }
 
     func toggle() {
@@ -215,7 +246,6 @@ final class IslandController: NSObject {
         // Toast dans l'île compacte (cliquable) ; si l'île est déjà dépliée, la ligne clignote simplement.
         if !model.expanded {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { model.toast = agent }
-            updateFrameForToast()
         }
         collapseWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
@@ -225,11 +255,6 @@ final class IslandController: NSObject {
         }
         collapseWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: work)
-    }
-
-    private func updateFrameForToast() {
-        let w = model.compactW, h = model.notchH
-        panel.setFrame(NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h), display: true)
     }
 
     func jump(to agent: Agent) {
@@ -253,12 +278,20 @@ final class IslandController: NSObject {
 
     private func mouseMoved() {
         let loc = NSEvent.mouseLocation
-        var area = panel.frame
+        var area = visibleRect()
         if !model.expanded {
-            // Zone de survol de l'île compacte, un peu élargie vers le haut/les côtés.
-            area = area.insetBy(dx: -6, dy: 0).union(NSRect(x: area.minX - 6, y: area.minY, width: area.width + 12, height: area.height + 6))
+            // Île compacte : zone de survol un peu élargie (côtés et bord haut de l'écran).
+            area = NSRect(x: area.minX - 6, y: area.minY, width: area.width + 12, height: area.height + 6)
         }
         let inside = area.contains(loc)
+        // Hors de l'île, la fenêtre (transparente et plus grande) laisse passer les clics.
+        let wantIgnore = !inside
+        if panel.ignoresMouseEvents != wantIgnore { panel.ignoresMouseEvents = wantIgnore }
+        if model.expanded {
+            let f = panel.frame
+            let p = CGPoint(x: loc.x - f.minX, y: f.maxY - loc.y)
+            model.setHoveredRow(inside ? model.rowFrames.first(where: { $0.value.contains(p) })?.key : nil)
+        }
         guard inside != hovering else { return }
         hovering = inside
         if inside {
