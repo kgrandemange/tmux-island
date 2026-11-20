@@ -22,7 +22,7 @@ enum ClaudeUsage {
     private static var transcriptCache: [String: URL] = [:]
     private static var tailCache: [String: (mtime: Date, size: Int, info: Info?)] = [:]
 
-    /// pane tmux (`%12`) → session Claude (id, statut, nom), pour les processus encore vivants.
+    /// « session|%pane » → session Claude (id, statut, nom), pour les processus encore vivants.
     static func sessionsByPane(alive: (Int32) -> Bool) -> [String: ClaudeSession] {
         let dir = home.appendingPathComponent(".claude/sessions")
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }
@@ -33,7 +33,8 @@ enum ClaudeUsage {
                   let tmux = j["tmux"] as? String, let sid = j["sessionId"] as? String,
                   let pid = j["pid"] as? Int, alive(Int32(pid)),
                   let r = tmux.range(of: ".%", options: .backwards) else { continue }
-            let pane = "%" + tmux[r.upperBound...]
+            guard let colon = tmux.firstIndex(of: ":") else { continue }
+            let pane = "\(tmux[..<colon])|%\(tmux[r.upperBound...])"
             let started = (j["startedAt"] as? Double) ?? 0
             let at = (j["statusUpdatedAt"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
             let s = ClaudeSession(sessionId: sid, status: j["status"] as? String, statusUpdatedAt: at, name: j["name"] as? String)

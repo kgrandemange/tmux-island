@@ -19,6 +19,8 @@ sur le tty ; autres terminaux : activation de l'app).
 - **Suivre l'écran actif** (menu, désactivé par défaut) : l'île se pose sur l'écran où se trouve le curseur
   et les alertes s'y affichent ; sinon elle reste sur la notch et une bannière prévient sur l'écran où tu travailles
   (non testé avec plusieurs écrans).
+- **Plusieurs serveurs tmux** : le serveur par défaut et les autres sockets (`tmux -L nom`, `-S chemin`) sont
+  tous pris en compte ; les sessions d'un serveur secondaire sont suffixées par le nom du socket.
 - **Sessions** : toutes tes sessions/fenêtres tmux en chips cliquables (pastille d'état si un agent y tourne).
 - **Contexte de Claude Code** : jauge (barre + jetons, orange > 60 %, rouge > 85 %) sur chaque ligne d'agent Claude, lue
   en lecture seule dans `~/.claude/sessions` et le transcript de la session (aucune config à modifier).

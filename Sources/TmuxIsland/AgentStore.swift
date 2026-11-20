@@ -97,22 +97,24 @@ final class AgentStore: ObservableObject {
 
     private nonisolated static func collect() -> Snapshot {
         var snap = Snapshot()
-        snap.panes = TmuxService.listPanes()
+        for server in TmuxService.discoverServers() {
+            snap.panes += TmuxService.listPanes(server: server)
+            snap.clients += TmuxService.listClients(server: server)
+        }
         guard !snap.panes.isEmpty else { return snap }
         let ps = ProcessTable()
         snap.hooks = HookStore.readAll(validPanes: Set(snap.panes.map(\.id)))
         snap.claude = ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
         for pane in snap.panes {
             if let k = ps.agentKind(under: pane.pid) { snap.kinds[pane.id] = k }
-            else if snap.claude[pane.id] != nil { snap.kinds[pane.id] = "claude" }
+            else if snap.claude[pane.claudeKey] != nil { snap.kinds[pane.id] = "claude" }
         }
         for pane in snap.panes where snap.kinds[pane.id] != nil || snap.hooks[pane.id] != nil {
-            snap.tails[pane.id] = TmuxService.capture(pane.id)
+            snap.tails[pane.id] = TmuxService.capture(pane)
         }
         for pane in snap.panes where snap.kinds[pane.id] == "claude" {
-            if let c = snap.claude[pane.id], let info = ClaudeUsage.info(sessionId: c.sessionId) { snap.usage[pane.id] = info }
+            if let c = snap.claude[pane.claudeKey], let info = ClaudeUsage.info(sessionId: c.sessionId) { snap.usage[pane.id] = info }
         }
-        snap.clients = TmuxService.listClients()
         for c in snap.clients {
             for a in [c.pid] + ps.ancestors(of: c.pid) {
                 if NSRunningApplication(processIdentifier: a)?.activationPolicy == .regular { snap.terminalPIDs.insert(a) }
@@ -138,7 +140,7 @@ final class AgentStore: ObservableObject {
             let waiting = Screen.isWaiting(tail)
             let old = tracks[pane.id] ?? Track(state: .idle, since: now)
             let userHere = userIsInTerminal && pane.isFocusedInSession && clientSessions.contains(pane.session)
-            let session = snap.claude[pane.id]
+            let session = snap.claude[pane.claudeKey]
             let tr = StateResolver.resolve(old: old, signals: Signals(
                 hook: hook, sessionStatus: session?.status, sessionStatusAt: session?.statusUpdatedAt,
                 screenWorking: working, screenWaiting: waiting, screenInterrupted: Screen.isInterrupted(tail),
@@ -167,15 +169,16 @@ final class AgentStore: ObservableObject {
         // Sessions / fenêtres
         var sess: [String: TmuxSession] = [:]
         for pane in snap.panes {
-            var s = sess[pane.session] ?? TmuxSession(name: pane.session, attached: pane.sessionAttached, windows: [])
+            let key = "\(pane.server ?? "")|\(pane.session)"
+            var s = sess[key] ?? TmuxSession(name: pane.session, server: pane.server, attached: pane.sessionAttached, windows: [])
             if let wi = s.windows.firstIndex(where: { $0.index == pane.windowIndex }) {
                 s.windows[wi].panes.append(pane)
             } else {
                 s.windows.append(TmuxWindow(index: pane.windowIndex, name: pane.windowName, active: pane.windowActive, panes: [pane]))
             }
-            sess[pane.session] = s
+            sess[key] = s
         }
-        sessions = sess.values.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        sessions = sess.values.sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
             .map { var s = $0; s.windows.sort { $0.index < $1.index }; return s }
         firstPoll = false
     }
@@ -194,7 +197,7 @@ final class AgentStore: ObservableObject {
     func target(for e: HistoryEntry) -> Pane? {
         let all = sessions.flatMap(\.windows).flatMap(\.panes)
         if let p = all.first(where: { $0.id == e.paneID && $0.session == e.session }) { return p }
-        return sessions.first { $0.name == e.session }?.windows.first { $0.index == e.windowIndex }?.activePane
+        return sessions.first { $0.name == e.session && $0.server == all.first(where: { $0.id == e.paneID })?.server }?.windows.first { $0.index == e.windowIndex }?.activePane
     }
 
     func state(ofWindow w: TmuxWindow) -> AgentState? {

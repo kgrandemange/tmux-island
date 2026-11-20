@@ -5,24 +5,24 @@ import Foundation
 enum FocusService {
     static func jump(to pane: Pane) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let client = TmuxService.listClients().max(by: { $0.activity < $1.activity })
-            TmuxService.run(["select-window", "-t", "=\(pane.session):\(pane.windowIndex)"])
-            TmuxService.run(["select-pane", "-t", pane.id])
+            let client = TmuxService.listClients(server: pane.server).max(by: { $0.activity < $1.activity })
+            TmuxService.run(["select-window", "-t", "=\(pane.session):\(pane.windowIndex)"], server: pane.server)
+            TmuxService.run(["select-pane", "-t", pane.tmuxID], server: pane.server)
             if let client {
-                TmuxService.run(["switch-client", "-c", client.tty, "-t", "=\(pane.session)"])
+                TmuxService.run(["switch-client", "-c", client.tty, "-t", "=\(pane.session)"], server: pane.server)
             }
             activateTerminal(for: client)
         }
     }
 
     static func sendEnter(to pane: Pane) {
-        DispatchQueue.global().async { TmuxService.sendKeys(pane.id, keys: ["Enter"]) }
+        DispatchQueue.global().async { TmuxService.sendKeys(pane, keys: ["Enter"]) }
     }
 
     static func reply(to pane: Pane, text: String) {
         DispatchQueue.global().async {
-            TmuxService.sendKeys(pane.id, literal: text)
-            TmuxService.sendKeys(pane.id, keys: ["Enter"])
+            TmuxService.sendKeys(pane, literal: text)
+            TmuxService.sendKeys(pane, keys: ["Enter"])
         }
     }
 

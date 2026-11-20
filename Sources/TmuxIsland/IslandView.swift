@@ -241,7 +241,7 @@ struct IslandView: View {
             Text("SESSIONS").font(.system(size: 9, weight: .semibold)).tracking(1).foregroundStyle(.tertiary)
             ForEach(store.sessions) { s in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(s.name).font(.system(size: 11, weight: .semibold)).foregroundStyle(s.attached ? .primary : .secondary)
+                    Text(s.displayName).font(.system(size: 11, weight: .semibold)).foregroundStyle(s.attached ? .primary : .secondary)
                         .frame(width: 92, alignment: .leading).lineLimit(1)
                     FlowChips(session: s, store: store, model: model)
                 }

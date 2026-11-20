@@ -17,7 +17,9 @@ enum AgentState: String {
 }
 
 struct Pane: Identifiable, Hashable {
-    let id: String            // ex: %12
+    let id: String            // unique entre serveurs : « %12 » (serveur par défaut) ou « socket:%12 »
+    let tmuxID: String        // identifiant tmux brut (« %12 »), pour les commandes
+    let server: String?       // chemin du socket tmux (nil = serveur par défaut)
     let session: String
     let windowIndex: Int
     let windowName: String
@@ -30,7 +32,8 @@ struct Pane: Identifiable, Hashable {
 
     var isFocusedInSession: Bool { paneActive && windowActive }
     var project: String { (path as NSString).lastPathComponent }
-    var numericID: String { String(id.dropFirst()) }
+    /// Clé de correspondance avec `~/.claude/sessions/*.json` (champ `tmux` : « session:@fenêtre.%pane »).
+    var claudeKey: String { "\(session)|\(tmuxID)" }
 }
 
 struct Agent: Identifiable, Equatable {
@@ -89,12 +92,16 @@ struct TmuxWindow: Identifiable {
 
 struct TmuxSession: Identifiable {
     let name: String
+    let server: String?
     let attached: Bool
     var windows: [TmuxWindow]
-    var id: String { name }
+    var id: String { "\(server ?? "")|\(name)" }
+    /// Les sessions d'un serveur tmux secondaire (`tmux -L nom`) sont suffixées par le nom du socket.
+    var displayName: String { server.map { "\(name) (\(($0 as NSString).lastPathComponent))" } ?? name }
 }
 
 struct TmuxClient {
+    var server: String? = nil
     let tty: String
     let pid: Int32
     let session: String

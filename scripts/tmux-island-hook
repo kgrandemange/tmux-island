@@ -8,6 +8,9 @@
 state="$1"; agent="${2:-claude}"; msg=""
 dir="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-island"
 pane="${TMUX_PANE#%}"
+# Plusieurs serveurs tmux (`tmux -L nom`) : les numéros de pane peuvent se recouper, on préfixe par le socket.
+sock="default"; [ -n "$TMUX" ] && sock="$(basename "${TMUX%%,*}")"
+[ "$sock" != "default" ] && pane="${sock}__${pane}"
 mkdir -p "$dir"
 
 # Codex appelle `notify` avec le JSON en dernier argument : fin de tour = done.
