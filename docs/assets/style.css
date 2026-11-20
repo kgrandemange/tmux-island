@@ -243,3 +243,8 @@ footer .brand { color: var(--text); }
 .desk .status { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(31, 143, 78, 0.85); color: #06150b; font: 11px var(--mono); padding: 4px 14px; display: flex; gap: 14px; }
 .desk .status b { background: #0d3d20; color: #bff5d2; padding: 0 7px; border-radius: 3px; font-weight: 500; }
 @media (max-width: 900px) { .desk { display: none; } }
+
+/* Vidéo de démonstration */
+.video-frame { margin: 56px auto 0; width: min(1040px, 100%); border-radius: 26px; overflow: hidden; border: 1px solid var(--line); background: #000;
+  box-shadow: 0 50px 120px -40px rgba(106, 123, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12); aspect-ratio: 16 / 9; }
+.video-frame video { width: 100%; height: 100%; display: block; object-fit: cover; }

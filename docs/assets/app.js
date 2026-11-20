@@ -23,6 +23,7 @@
       if (n.dataset.enAlt !== undefined) n.setAttribute("alt", lang === "en" ? n.dataset.enAlt : n.dataset.frAlt);
       if (n.dataset.enLabel !== undefined) n.setAttribute("aria-label", lang === "en" ? n.dataset.enLabel : n.dataset.frLabel);
     });
+    setVideoLang(lang);
     document.title = meta[lang].title;
     document.querySelector('meta[name="description"]')?.setAttribute("content", meta[lang].desc);
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
@@ -30,6 +31,19 @@
   }
   let saved = null;
   try { saved = localStorage.getItem("lang"); } catch (_) {}
+  /* ---------- Vidéo de démonstration (version FR / EN) ---------- */
+  const video = document.getElementById("hero-video");
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function setVideoLang(lang) {
+    if (!video) return;
+    const base = "assets/tmuxisland-" + lang;
+    const wasPlaying = !video.paused;
+    video.poster = "assets/poster-" + lang + ".jpg";
+    video.innerHTML = '<source src="' + base + '.webm" type="video/webm; codecs=vp9"><source src="' + base + '.mp4" type="video/mp4">';
+    video.load();
+    if (!reduceMotion && (wasPlaying || video.dataset.started !== "1")) { video.dataset.started = "1"; video.play().catch(() => {}); }
+  }
+
   const browserFr = (navigator.language || "fr").toLowerCase().startsWith("fr");
   setLang(saved === "fr" || saved === "en" ? saved : browserFr ? "fr" : "en");
   buttons.forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));

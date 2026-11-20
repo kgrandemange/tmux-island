@@ -60,55 +60,10 @@
   </div>
   <p class="meta" data-en="macOS 14+ · tmux 3.x · everything stays on your Mac">macOS 14+ · tmux 3.x · tout reste sur ton Mac</p>
 
-  <!-- Maquette animée de l'île -->
-  <div class="stage" id="stage" role="img" data-en-label="Animation: the island goes from compact, to a toast when an agent finishes, to expanded with its actions" aria-label="Animation : l'île passe de compacte à un toast quand un agent finit, puis se déplie avec ses actions">
-    <div class="menubar" aria-hidden="true"><b></b><b>Terminal</b><span>Shell</span><span>Edit</span><span>View</span><span class="sp">▮▮ 82%</span><span>Fri 14:12</span></div>
-    <div class="desk" aria-hidden="true">
-      <div class="bar"><i></i><i></i><i></i></div>
-<pre><b>$</b> claude
-● Refactoring invoice totals…
-  ⎿ Updated src/invoice/totals.ts
-<b>$</b> tmux list-sessions
-api: 3 windows (attached)
-infra: 2 windows
-web: 4 windows (attached)</pre>
-      <div class="status"><b>[api]</b><span>0:server</span><span><u>1:payments*</u></span><span>2:tests</span><span>3:logs</span></div>
-    </div>
-    <div class="island" id="island" data-state="compact" aria-hidden="true">
-      <!-- compact -->
-      <div class="layer l-compact">
-        <span class="l"><i class="term-ic"></i> 3</span>
-        <span class="r"><i class="dot waiting"></i><i class="dot done"></i><i class="dot working"></i></span>
-      </div>
-      <!-- toast -->
-      <div class="layer l-toast">
-        <span class="l">shop-infra <i class="dot done"></i></span>
-        <span class="r" data-en="done">terminé</span>
-      </div>
-      <!-- déplié -->
-      <div class="layer l-expanded">
-        <div class="x-head"><i class="term-ic"></i><b>tmux</b><span><i class="dot working"></i> 1 <i class="dot waiting"></i> 1 <i class="dot done"></i> 1</span><span class="grow"></span><span class="conc" data-en="Focus">Concentration</span><kbd>⌃⌥Space</kbd></div>
-        <div class="row">
-          <span class="ic waiting">!</span><span class="t">Claude<span>web › checkout-ui</span></span><span class="st waiting" data-en="waiting">en attente</span>
-          <span class="s"><i>shop-web</i>Claude needs your permission to use Bash</span>
-          <div class="acts"><span class="p">1 · Yes</span><span>2 · Yes, always</span><span>3 · No</span></div>
-        </div>
-        <div class="row">
-          <span class="ic done">✓</span><span class="t">Codex<span>infra › terraform</span></span><span class="st done" data-en="done">terminé</span>
-          <span class="s"><i>shop-infra</i>✔ Staging environment is up to date.</span>
-        </div>
-        <div class="row">
-          <span class="ic working"><i></i></span><span class="t">Claude<span>api › payments</span></span><span class="st working"><span class="gauge"><b></b>640k</span><span data-en="running">en cours</span></span>
-          <span class="s"><i>shop-api</i>✻ Refactoring invoice totals… (1m 12s)</span>
-        </div>
-        <div class="sess">
-          <div><em>api</em><span class="on"><i class="dot working"></i>1 payments</span><span>2 tests</span><span>3 logs</span></div>
-          <div><em>web</em><span>1 editor</span><span class="on"><i class="dot waiting"></i>2 checkout-ui</span><span>3 storybook</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="stage-caption" aria-hidden="true"><span class="steps"><i></i><i></i><i></i></span> &nbsp; <span data-en="Hover to expand">Survole la scène pour la déplier</span></div>
-  </div>
+  <!-- Vidéo de démonstration (scène : docs/video.html) -->
+  <figure class="video-frame">
+    <video id="hero-video" muted loop playsinline preload="metadata" controls poster="assets/poster-fr.jpg" aria-label="Démonstration : un agent termine, un clic mène au bon pane tmux, validation d'une permission depuis l'île." data-en-label="Demo: an agent finishes, one click leads to the right tmux pane, a permission is approved from the island."></video>
+  </figure>
 </div>
 
 <!-- ============ TMUX ============ -->

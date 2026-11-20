@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>TmuxIsland — scène vidéo</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    /* Scène 16:9 destinée à être enregistrée (voir docs/video.html?lang=en&auto=0). Données fictives. */
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    .glow { display: none; }
+    #scene { position: relative; width: 1280px; height: 720px; overflow: hidden; margin: 0 auto;
+      background: linear-gradient(135deg, #14194a 0%, #0b6577 52%, #5b2d7a 100%); font-family: var(--sans); }
+    #menubar { position: absolute; inset: 0 0 auto 0; height: 28px; background: rgba(255, 255, 255, .12); backdrop-filter: blur(10px);
+      display: flex; gap: 20px; align-items: center; padding: 0 20px; font-size: 13px; color: rgba(255, 255, 255, .88); z-index: 2; }
+    #menubar b { font-weight: 700; } #menubar .sp { margin-left: auto; }
+    /* L'île est agrandie pour rester lisible dans la vidéo */
+    #scene .island { transform: translateX(-50%) scale(1.3); transform-origin: top center; z-index: 5; }
+    /* Fenêtre de terminal */
+    #term { position: absolute; left: 140px; right: 140px; top: 190px; bottom: 120px; border-radius: 14px; overflow: hidden;
+      background: rgba(8, 10, 20, .86); border: 1px solid rgba(255, 255, 255, .16); box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8); }
+    #term .bar { display: flex; gap: 8px; padding: 12px 14px; border-bottom: 1px solid rgba(255, 255, 255, .08); align-items: center; }
+    #term .bar i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; } #term .bar i:nth-child(2) { background: #febc2e; } #term .bar i:nth-child(3) { background: #28c840; }
+    #term .bar span { margin-left: 12px; font: 12px var(--mono); color: rgba(255, 255, 255, .45); }
+    #screen { margin: 0; padding: 18px 22px; font: 15px/1.7 var(--mono); color: rgba(225, 230, 248, .85); white-space: pre-wrap; text-align: left; transition: opacity .18s; height: calc(100% - 100px); }
+    #screen.swap { opacity: 0; }
+    #screen .y { color: #ffb02e; } #screen .g { color: #4ae07a; } #screen .d { color: rgba(225, 230, 248, .45); }
+    #status { position: absolute; left: 0; right: 0; bottom: 0; background: #1f8f4e; color: #06150b; font: 13px var(--mono); padding: 6px 16px; display: flex; gap: 16px; align-items: center; }
+    #status b { background: #0d3d20; color: #bff5d2; padding: 1px 9px; border-radius: 3px; font-weight: 500; }
+    #status .cur { font-weight: 800; text-decoration: underline; }
+    /* Curseur et clic */
+    #cursor { position: absolute; left: 640px; top: 560px; width: 30px; height: 30px; z-index: 20; pointer-events: none; opacity: 0;
+      transition: left .95s cubic-bezier(.3, .1, .2, 1), top .95s cubic-bezier(.3, .1, .2, 1), opacity .3s; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .5)); }
+    #ripple { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .9); z-index: 19; opacity: 0; pointer-events: none; }
+    #ripple.go { animation: ripple .55s ease-out; }
+    @keyframes ripple { from { opacity: 1; transform: scale(.6); } to { opacity: 0; transform: scale(4.2); } }
+    /* Sous-titres */
+    #cap { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; z-index: 30; transition: opacity .35s; }
+    #cap span { display: inline-block; padding: 12px 26px; border-radius: 14px; background: rgba(5, 7, 14, .78); backdrop-filter: blur(8px);
+      color: #fff; font-size: 24px; font-weight: 600; letter-spacing: -.01em; border: 1px solid rgba(255, 255, 255, .14); }
+    #cap.hide { opacity: 0; }
+    /* Carte de fin */
+    #end { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; align-content: center; gap: 16px; text-align: center;
+      background: rgba(5, 6, 12, .9); opacity: 0; pointer-events: none; transition: opacity .8s; }
+    #end.show { opacity: 1; }
+    #end img { width: 92px; border-radius: 22px; }
+    #end h1 { font-size: 54px; margin: 0; letter-spacing: -.03em; } #end p { margin: 0; color: var(--muted); font-size: 22px; }
+    .island .row .acts span.press { background: rgba(48, 209, 88, .85); color: #04150a; }
+  </style>
+</head>
+<body>
+<div id="scene">
+  <div id="menubar"><b></b><b>WezTerm</b><span>Shell</span><span>Edit</span><span>View</span><span class="sp">▮▮ 82%</span><span>Fri 14:12</span></div>
+
+  <div id="term">
+    <div class="bar"><i></i><i></i><i></i><span id="termTitle">tmux — api</span></div>
+    <pre id="screen"></pre>
+    <div id="status"></div>
+  </div>
+
+  <div class="island" id="island" data-state="compact">
+    <div class="layer l-compact"><span class="l"><i class="term-ic"></i> 3</span><span class="r" id="dots"></span></div>
+    <div class="layer l-toast"><span class="l" id="toastL"></span><span class="r" id="toastR"></span></div>
+    <div class="layer l-expanded">
+      <div class="x-head"><i class="term-ic"></i><b>tmux</b><span id="pills"></span><span class="grow"></span><span class="conc" id="conc">Concentration</span><kbd>⌃⌥Space</kbd></div>
+      <div id="rows"></div>
+      <div class="sess">
+        <div><em>api</em><span class="on" id="chipApi">1 payments</span><span>2 tests</span><span>3 logs</span></div>
+        <div><em>web</em><span>1 editor</span><span id="chipWeb">2 checkout-ui</span><span>3 storybook</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ripple"></div>
+  <svg id="cursor" viewBox="0 0 24 24"><path d="M3 2l17 8-7 2.2L10.5 20z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  <div id="cap" class="hide"><span></span></div>
+  <div id="end"><img src="assets/logo.svg" alt=""><h1>TmuxIsland</h1><p id="tag">La Dynamic Island de ton tmux</p></div>
+</div>
+
+<script>
+(() => {
+  const Q = new URLSearchParams(location.search);
+  const EN = Q.get('lang') === 'en';
+  const T = (fr, en) => (EN ? en : fr);
+  document.documentElement.lang = EN ? 'en' : 'fr';
+  document.getElementById('tag').textContent = T('La Dynamic Island de ton tmux', 'The Dynamic Island for your tmux');
+  document.getElementById('conc').textContent = T('Concentration', 'Focus');
+
+  const $ = (s) => document.querySelector(s);
+  const island = $('#island'), screen = $('#screen'), cap = $('#cap'), cursor = $('#cursor'), ripple = $('#ripple');
+  const ST = { working: T('en cours', 'running'), waiting: T('en attente', 'waiting'), done: T('terminé', 'done') };
+  const agents = {
+    web:   { name: 'Claude', loc: 'web › checkout-ui', proj: 'shop-web',   state: 'working', line: '✻ Wiring the checkout form… (1m 04s)', gauge: '182k' },
+    infra: { name: 'Codex',  loc: 'infra › terraform', proj: 'shop-infra', state: 'working', line: '✻ terraform apply (staging)…',        gauge: '' },
+    api:   { name: 'Claude', loc: 'api › payments',    proj: 'shop-api',   state: 'working', line: '✻ Refactoring invoice totals… (1m 12s)', gauge: '640k' },
+  };
+  const PRIO = { waiting: 0, done: 1, working: 2 };
+  const COLOR = { waiting: 'waiting', done: 'done', working: 'working' };
+
+  /* ---------- Rendu de l'île ---------- */
+  function sorted() { return Object.entries(agents).sort((a, b) => PRIO[a[1].state] - PRIO[b[1].state]); }
+  function renderIsland() {
+    $('#dots').innerHTML = sorted().map(([, a]) => `<i class="dot ${COLOR[a.state]}"></i>`).join('');
+    const c = { working: 0, waiting: 0, done: 0 }; Object.values(agents).forEach((a) => c[a.state]++);
+    $('#pills').innerHTML = ['working', 'waiting', 'done'].filter((k) => c[k]).map((k) => `<i class="dot ${k}" style="margin:0 4px 0 9px"></i>${c[k]}`).join('');
+    $('#rows').innerHTML = sorted().map(([id, a]) => {
+      const ic = a.state === 'waiting' ? '!' : a.state === 'done' ? '✓' : '<i></i>';
+      const sub = a.state === 'waiting' ? 'Claude needs your permission to use Bash' : a.state === 'done' ? (id === 'infra' ? '✔ Staging environment is up to date.' : '✔ 42 tests passed — checkout form is wired.') : a.line;
+      const gauge = a.state === 'working' && a.gauge ? `<span class="gauge"><b></b>${a.gauge}</span>` : '';
+      const acts = a.state === 'waiting' ? `<div class="acts"><span class="p" data-act="1">1 · Yes</span><span data-act="2">2 · Yes, always</span><span data-act="3">3 · No</span></div>` : '';
+      return `<div class="row" data-row="${id}"><span class="ic ${a.state}">${ic}</span><span class="t">${a.name}<span>${a.loc}</span></span><span class="st ${a.state}">${gauge}${ST[a.state]}</span><span class="s"><i>${a.proj}</i>${sub}</span>${acts}</div>`;
+    }).join('');
+  }
+  function toast(id, text) {
+    const a = agents[id];
+    $('#toastL').innerHTML = `${a.proj} <i class="dot ${COLOR[a.state]}"></i>`;
+    const r = $('#toastR'); r.textContent = text; r.style.color = a.state === 'waiting' ? 'var(--waiting)' : 'var(--done)';
+    island.dataset.state = 'toast';
+  }
+
+  /* ---------- Terminal ---------- */
+  const SCREENS = {
+    api: () => `<span class="g">●</span> Update(src/invoice/totals.ts)\n  <span class="d">⎿  Updated src/invoice/totals.ts with 6 additions and 2 removals</span>\n<span class="g">●</span> Bash(npm test -- invoice)\n  <span class="d">⎿  PASS  src/invoice/totals.test.ts (12 tests)</span>\n<span class="g">●</span> Read(src/invoice/discounts.ts)\n\n<span class="y">✻ Refactoring invoice totals… (<span id="tick">1m 12s</span> · esc to interrupt)</span>`,
+    infra: () => `Apply complete! Resources: 3 added, 1 changed, 0 destroyed.\n<span class="g">✔ Staging environment is up to date.</span>\n\n❯ `,
+    web: () => `<span class="g">✔ Build succeeded in 8.2s</span>\n<span class="g">✔ 42 tests passed — checkout form is wired.</span>\n\n❯ `,
+  };
+  const BARS = {
+    api:   '<b>[api]</b><span class="cur">1:payments*</span><span>2:tests</span><span>3:logs</span>',
+    infra: '<b>[infra]</b><span class="cur">1:terraform*</span><span>2:k9s</span>',
+    web:   '<b>[web]</b><span>1:editor</span><span class="cur">2:checkout-ui*</span><span>3:storybook</span><span>4:e2e</span>',
+  };
+  let current = 'api';
+  function showTerm(id, instant) {
+    const apply = () => { current = id; screen.innerHTML = SCREENS[id](); $('#status').innerHTML = BARS[id]; $('#termTitle').textContent = 'tmux — ' + id; };
+    if (instant) return apply();
+    screen.classList.add('swap'); setTimeout(() => { apply(); screen.classList.remove('swap'); }, 190);
+  }
+  let secs = 72;
+  setInterval(() => { secs++; const t = document.getElementById('tick'); if (t && current === 'api') t.textContent = `${Math.floor(secs / 60)}m ${String(secs % 60).padStart(2, '0')}s`; }, 1000);
+
+  /* ---------- Curseur ---------- */
+  function center(el) { const r = el.getBoundingClientRect(), s = $('#scene').getBoundingClientRect(); return [r.left - s.left + r.width / 2, r.top - s.top + r.height / 2]; }
+  function moveTo(el, dx = 0, dy = 0) { const [x, y] = center(el); cursor.style.opacity = 1; cursor.style.left = (x - 6 + dx) + 'px'; cursor.style.top = (y - 3 + dy) + 'px'; }
+  function click(el) {
+    const [x, y] = center(el); ripple.style.left = x + 'px'; ripple.style.top = y + 'px';
+    ripple.classList.remove('go'); void ripple.offsetWidth; ripple.classList.add('go');
+  }
+
+  /* ---------- Sous-titres ---------- */
+  let capTimer;
+  function say(fr, en) { clearTimeout(capTimer); cap.classList.add('hide'); capTimer = setTimeout(() => { cap.firstElementChild.textContent = T(fr, en); cap.classList.remove('hide'); }, 280); }
+  function unsay() { cap.classList.add('hide'); }
+
+  /* ---------- Scénario ---------- */
+  const steps = [];
+  const at = (ms, fn) => steps.push([ms, fn]);
+
+  at(300,   () => say('Trois agents IA travaillent dans tmux.', 'Three AI agents are working in tmux.'));
+  at(3600,  () => { agents.infra.state = 'done'; renderIsland(); toast('infra', T('terminé', 'done')); say('L’un d’eux termine : l’île te prévient.', 'One finishes: the island lets you know.'); });
+  at(5600,  () => moveTo($('#toastL'), 40, 6));
+  at(6900,  () => click($('#toastL')));
+  at(7000,  () => { showTerm('infra'); island.dataset.state = 'compact'; say('Un clic : le bon pane, dans le bon terminal.', 'One click: the right pane, in the right terminal.'); });
+  at(9800,  () => { agents.web.state = 'waiting'; renderIsland(); toast('web', T('attend', 'waiting')); say('Un autre attend ta permission.', 'Another one waits for your permission.'); });
+  at(11800, () => { moveTo($('#toastL'), 20, 10); });
+  at(12900, () => { island.dataset.state = 'expanded'; renderIsland(); say('Valide sans changer de fenêtre.', 'Approve without switching windows.'); });
+  at(14400, () => moveTo($('[data-act="1"]')));
+  at(15700, () => { const b = $('[data-act="1"]'); click(b); b.classList.add('press'); });
+  at(16100, () => { agents.web.state = 'working'; renderIsland(); say('L’agent reprend aussitôt.', 'The agent resumes right away.'); });
+  at(19600, () => { agents.web.state = 'done'; renderIsland(); say('Terminé. Reste à y retourner.', 'Done. Time to go look.'); });
+  at(21000, () => moveTo($('[data-row="web"] .t')));
+  at(22200, () => click($('[data-row="web"] .t')));
+  at(22300, () => { showTerm('web'); island.dataset.state = 'compact'; say('Chaque agent, à un clic.', 'Every agent, one click away.'); });
+  at(24800, () => { cursor.style.opacity = 0; unsay(); });
+  at(25400, () => $('#end').classList.add('show'));
+  at(29200, () => { window.__done = true; });
+
+  function play() { steps.forEach(([ms, fn]) => setTimeout(fn, ms)); }
+  showTerm('api', true); renderIsland();
+  window.playVideo = play;
+  window.seekVideo = (ms) => steps.filter(([t]) => t <= ms).forEach(([, fn]) => fn());   // aperçu d'un instant (tests)
+  if (Q.get('auto') !== '0') setTimeout(play, 600);
+})();
+</script>
+</body>
+</html>
