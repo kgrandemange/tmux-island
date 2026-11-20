@@ -305,7 +305,12 @@ struct AgentRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 10).padding(.vertical, 8)
                 .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.06)))
-                .transition(.opacity)
+                // Le texte n'apparaît qu'une fois la place faite (sinon il se superpose aux sections qui glissent)
+                // et disparaît tout de suite à la fermeture.
+                .transition(.asymmetric(
+                    insertion: .opacity.animation(.easeIn(duration: 0.12).delay(0.14)),
+                    removal: .opacity.animation(.easeOut(duration: 0.05))))
+                .clipped()
             }
             if replying {
                 TextField("Réponse rapide (↵ pour envoyer)", text: $reply)
