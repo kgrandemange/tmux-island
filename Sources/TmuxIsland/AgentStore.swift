@@ -10,45 +10,7 @@ private struct Snapshot {
     var clients: [TmuxClient] = []
     var terminalPIDs: Set<Int32> = []
     var usage: [String: ClaudeUsage.Info] = [:]
-}
-
-private struct Track {
-    var state: AgentState = .idle
-    var since: Date = Date()
-    var ackedHookTS: Double = 0
-    var doneAcked = false
-}
-
-/// Écran d'un agent : heuristiques sur le contenu du pane (en complément des hooks).
-private enum Screen {
-    static func isWorking(_ lines: [String]) -> Bool {
-        lines.suffix(12).contains { $0.localizedCaseInsensitiveContains("esc to interrupt") || $0.localizedCaseInsensitiveContains("ctrl+c to interrupt") }
-    }
-
-    static func isWaiting(_ lines: [String]) -> Bool {
-        lines.suffix(14).contains {
-            $0.contains("Do you want to") || $0.contains("❯ 1. Yes") || $0.contains("(y/n)") || $0.contains("[Y/n]")
-                || $0.localizedCaseInsensitiveContains("Esc to cancel")
-        }
-    }
-
-    /// Dernières lignes brutes du pane (sans les filets décoratifs), pour l'aperçu au survol.
-    static func preview(_ lines: [String]) -> [String] {
-        let noise = CharacterSet(charactersIn: "─━│┃╭╮╰╯┌┐└┘ ╌")
-        return lines.filter { l in !l.unicodeScalars.allSatisfy { noise.contains($0) } }
-            .suffix(10).map { String($0.prefix(130)) }
-    }
-
-    static func meaningful(_ lines: [String]) -> [String] {
-        let noise = CharacterSet(charactersIn: "─━│┃╭╮╰╯┌┐└┘ >❯|╌")
-        return lines.filter { line in
-            if line.unicodeScalars.allSatisfy({ noise.contains($0) }) { return false }
-            let l = line.lowercased()
-            return !(l.contains("? for shortcuts") || l.contains("bypass permissions") || l.contains("esc to interrupt")
-                || l.contains("accept edits") || l.hasPrefix("> ") || l.hasPrefix("❯") || l.hasPrefix("│ >") || l.hasPrefix("│"))
-        }
-        .suffix(2).map { String($0.prefix(140)) }
-    }
+    var claude: [String: ClaudeSession] = [:]
 }
 
 @MainActor
@@ -119,15 +81,16 @@ final class AgentStore: ObservableObject {
         guard !snap.panes.isEmpty else { return snap }
         let ps = ProcessTable()
         snap.hooks = HookStore.readAll(validPanes: Set(snap.panes.map(\.id)))
+        snap.claude = ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
         for pane in snap.panes {
             if let k = ps.agentKind(under: pane.pid) { snap.kinds[pane.id] = k }
+            else if snap.claude[pane.id] != nil { snap.kinds[pane.id] = "claude" }
         }
         for pane in snap.panes where snap.kinds[pane.id] != nil || snap.hooks[pane.id] != nil {
             snap.tails[pane.id] = TmuxService.capture(pane.id)
         }
-        let sessions = ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
         for pane in snap.panes where snap.kinds[pane.id] == "claude" {
-            if let sid = sessions[pane.id], let info = ClaudeUsage.info(sessionId: sid) { snap.usage[pane.id] = info }
+            if let c = snap.claude[pane.id], let info = ClaudeUsage.info(sessionId: c.sessionId) { snap.usage[pane.id] = info }
         }
         snap.clients = TmuxService.listClients()
         for c in snap.clients {
@@ -153,41 +116,14 @@ final class AgentStore: ObservableObject {
             let tail = snap.tails[pane.id] ?? []
             let working = Screen.isWorking(tail)
             let waiting = Screen.isWaiting(tail)
-            var tr = tracks[pane.id] ?? Track(state: .idle, since: now)
-            let old = tr.state
-
-            var new: AgentState
-            if let h = hook {
-                let age = now.timeIntervalSince1970 - h.ts
-                switch h.state {
-                case "waiting": new = .waiting
-                case "working":
-                    // Un Esc (interruption) ne déclenche pas de hook Stop : on recoupe avec l'écran.
-                    new = waiting ? .waiting : ((working || age < 6) ? .working : .idle)
-                case "done":
-                    new = (tr.ackedHookTS == h.ts) ? .idle : (working ? .working : .done)
-                default: new = .idle
-                }
-            } else {
-                if waiting { new = .waiting }
-                else if working { new = .working }
-                else if old == .working { new = .done; tr.doneAcked = false }
-                else if old == .done && !tr.doneAcked { new = .done }
-                else { new = .idle }
-            }
-
-            // L'utilisateur regarde déjà ce pane : on acquitte automatiquement le « terminé ».
+            let old = tracks[pane.id] ?? Track(state: .idle, since: now)
             let userHere = userIsInTerminal && pane.isFocusedInSession && clientSessions.contains(pane.session)
-            if userHere && new == .done {
-                new = .idle
-                tr.doneAcked = true
-                if let h = hook { tr.ackedHookTS = h.ts }
-            }
-
-            if new != old {
-                tr.state = new
-                tr.since = (new == .done || new == .waiting) ? (hook.map { Date(timeIntervalSince1970: $0.ts) } ?? now) : now
-            }
+            let session = snap.claude[pane.id]
+            let tr = StateResolver.resolve(old: old, signals: Signals(
+                hook: hook, sessionStatus: session?.status, sessionStatusAt: session?.statusUpdatedAt,
+                screenWorking: working, screenWaiting: waiting, screenInterrupted: Screen.isInterrupted(tail),
+                userHere: userHere, now: now))
+            let new = tr.state
             tracks[pane.id] = tr
 
             let agent = Agent(pane: pane, kind: kind, state: new, since: tr.since,
@@ -195,7 +131,7 @@ final class AgentStore: ObservableObject {
                               screen: Screen.preview(tail), usage: snap.usage[pane.id])
             result.append(agent)
 
-            if new != old, new.needsAttention, !firstPoll {
+            if new != old.state, new.needsAttention, !firstPoll {
                 record(agent)
                 if !userHere { alerts.send(agent) }
             }

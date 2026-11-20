@@ -1,5 +1,12 @@
 import Foundation
 
+struct ClaudeSession: Equatable {
+    let sessionId: String
+    let status: String?
+    let statusUpdatedAt: Date?
+    let name: String?
+}
+
 /// Remplissage du contexte d'une session Claude Code, lu en lecture seule :
 /// - `~/.claude/sessions/<pid>.json` relie un pane tmux à une session (champ `tmux`) ;
 /// - le transcript `~/.claude/projects/*/<session>.jsonl` donne l'usage du dernier message de l'assistant.
@@ -15,11 +22,11 @@ enum ClaudeUsage {
     private static var transcriptCache: [String: URL] = [:]
     private static var tailCache: [String: (mtime: Date, size: Int, info: Info?)] = [:]
 
-    /// pane tmux (`%12`) → identifiant de session Claude, pour les processus encore vivants.
-    static func sessionsByPane(alive: (Int32) -> Bool) -> [String: String] {
+    /// pane tmux (`%12`) → session Claude (id, statut, nom), pour les processus encore vivants.
+    static func sessionsByPane(alive: (Int32) -> Bool) -> [String: ClaudeSession] {
         let dir = home.appendingPathComponent(".claude/sessions")
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }
-        var best: [String: (sid: String, started: Double)] = [:]
+        var best: [String: (s: ClaudeSession, started: Double)] = [:]
         for f in files where f.pathExtension == "json" {
             guard let d = try? Data(contentsOf: f),
                   let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
@@ -28,9 +35,11 @@ enum ClaudeUsage {
                   let r = tmux.range(of: ".%", options: .backwards) else { continue }
             let pane = "%" + tmux[r.upperBound...]
             let started = (j["startedAt"] as? Double) ?? 0
-            if best[pane] == nil || started > best[pane]!.started { best[pane] = (sid, started) }
+            let at = (j["statusUpdatedAt"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
+            let s = ClaudeSession(sessionId: sid, status: j["status"] as? String, statusUpdatedAt: at, name: j["name"] as? String)
+            if best[pane] == nil || started > best[pane]!.started { best[pane] = (s, started) }
         }
-        return best.mapValues(\.sid)
+        return best.mapValues(\.s)
     }
 
     static func info(sessionId: String) -> Info? {
