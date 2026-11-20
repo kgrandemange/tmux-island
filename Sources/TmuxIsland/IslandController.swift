@@ -9,6 +9,9 @@ final class IslandModel: ObservableObject {
     @Published var flashPane: String?
     /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
     @Published var toast: Agent?
+    /// Mode concentration : plus de son, de toast ni de bannière — seuls les points d'état restent.
+    @Published var focusMode = UserDefaults.standard.bool(forKey: "focusMode")
+    var onToggleFocus: (() -> Void)?
     var notchW: CGFloat = 190
     var notchH: CGFloat = 32
     var hasActivity = false
@@ -92,6 +95,7 @@ final class IslandController: NSObject {
         host.sizingOptions = []
         panel.contentView = host
         model.requestKey = { [weak self] in self?.panel.makeKey() }
+        model.onToggleFocus = { [weak self] in self?.toggleFocus() }
         model.onTapCompact = { [weak self] in
             guard let self else { return }
             if let t = self.model.toast { self.jump(to: t) } else { self.toggle() }
@@ -173,7 +177,15 @@ final class IslandController: NSObject {
         }
     }
 
+    func toggleFocus() {
+        model.focusMode.toggle()
+        UserDefaults.standard.set(model.focusMode, forKey: "focusMode")
+        // En quittant la concentration, on annonce ce qui s'est accumulé.
+        if !model.focusMode, let next = store.nextAttention() { notify(next) }
+    }
+
     private func notify(_ agent: Agent) {
+        if model.focusMode { return }
         NSSound(named: agent.state == .waiting ? "Funk" : "Glass")?.play()
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         model.flashPane = agent.id
@@ -259,6 +271,7 @@ final class IslandController: NSObject {
             return true
         }
         guard let ch = e.charactersIgnoringModifiers?.lowercased(), e.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return false }
+        if ch == "f" { toggleFocus(); return true }
         if ch == "j" { jumpToNextAttention(); return true }
         let visible = store.visibleAgents
         if let n = Int(ch), n >= 1, n <= visible.count { jump(to: visible[n - 1]); return true }

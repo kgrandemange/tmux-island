@@ -1,5 +1,6 @@
 import AppKit
 import Carbon
+import Combine
 import SwiftUI
 
 @MainActor
@@ -7,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = AgentStore()
     private var controller: IslandController!
     private var statusItem: NSStatusItem!
+    private var focusItem: NSMenuItem!
+    private var focusSub: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         controller = IslandController(store: store)
@@ -26,11 +29,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.controller.jumpToNextAttention()
         }
 
+        HotKeyCenter.shared.register(keyCode: UInt32(kVK_ANSI_F), modifiers: mods) { [weak self] in
+            self?.controller.toggleFocus()
+        }
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "TmuxIsland")
         let menu = NSMenu()
         menu.addItem(withTitle: "Ouvrir l'île  (⌃⌥Space)", action: #selector(toggle), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Prochain agent à traiter  (⌃⌥J)", action: #selector(next), keyEquivalent: "").target = self
+        focusItem = menu.addItem(withTitle: "Mode concentration  (⌃⌥F)", action: #selector(toggleFocus), keyEquivalent: "")
+        focusItem.target = self
+        focusItem.state = controller.model.focusMode ? .on : .off
+        focusSub = controller.model.$focusMode.sink { [weak self] on in self?.focusItem.state = on ? .on : .off }
         menu.addItem(.separator())
         menu.addItem(withTitle: "Ouvrir le dossier des états", action: #selector(openState), keyEquivalent: "").target = self
         menu.addItem(.separator())
@@ -39,6 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func toggle() { controller.toggle() }
+    @objc private func toggleFocus() { controller.toggleFocus() }
     @objc private func next() { controller.jumpToNextAttention() }
     @objc private func openState() {
         try? FileManager.default.createDirectory(at: HookStore.dir, withIntermediateDirectories: true)

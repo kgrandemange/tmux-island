@@ -101,8 +101,9 @@ struct IslandView: View {
         HStack(spacing: 0) {
             // Aile gauche : présence de tmux (toujours visible) + nombre de sessions
             HStack(spacing: 5) {
-                Image(systemName: "terminal").font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(store.tmuxRunning ? Color.white.opacity(0.55) : Color.white.opacity(0.2))
+                Image(systemName: model.focusMode ? "moon.fill" : "terminal").font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0)
+                                     : store.tmuxRunning ? Color.white.opacity(0.55) : Color.white.opacity(0.2))
                 if store.tmuxRunning {
                     Text("\(store.sessions.count)").font(.system(size: 11, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.45))
@@ -157,8 +158,20 @@ struct IslandView: View {
             }
             .padding(.leading, 28)
             Spacer(minLength: model.notchW)
-            Text("⌃⌥Space").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
-                .padding(.trailing, 28)
+            HStack(spacing: 10) {
+                Button { model.onToggleFocus?() } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: model.focusMode ? "moon.fill" : "moon")
+                        Text("Concentration").font(.system(size: 10, weight: .medium))
+                    }
+                    .foregroundStyle(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0) : Color.white.opacity(0.5))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Capsule().fill(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0).opacity(0.2) : Color.white.opacity(0.08)))
+                }
+                .buttonStyle(.plain)
+                Text("⌃⌥Space").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
+            }
+            .padding(.trailing, 28)
         }
         .frame(height: model.notchH)
     }
@@ -208,6 +221,7 @@ struct IslandView: View {
         HStack(spacing: 14) {
             Hint(key: "1-9", text: "aller à l'agent")
             Hint(key: "J", text: "prochain à traiter")
+            Hint(key: "F", text: "concentration")
             Hint(key: "Esc", text: "fermer")
         }
         .frame(maxWidth: .infinity, alignment: .center)
