@@ -31,6 +31,14 @@ final class AgentStore: ObservableObject {
     private var firstPoll = true
     private var busy = false
     private var timer: Timer?
+    private var pendingPoll = false
+    private var interval: TimeInterval = 1.0
+    private var watcher: FileWatcher?
+
+    /// Cadence de relevé de secours : 1 s tant qu'un agent n'a pas de statut officiel (heuristique d'écran),
+    /// sinon 3 s. Les changements de fichiers déclenchent un relevé immédiat. Surchargeable pour les tests.
+    private static let debug = ProcessInfo.processInfo.environment["TMUXISLAND_DEBUG"] != nil
+    private static let envInterval = ProcessInfo.processInfo.environment["TMUXISLAND_POLL_INTERVAL"].flatMap(Double.init)
 
     /// Agents affichés en lignes dans l'île : tout sauf les inactifs (ceux-ci restent accessibles via les sessions).
     var visibleAgents: [Agent] { agents.filter { $0.state != .idle } }
@@ -42,7 +50,17 @@ final class AgentStore: ObservableObject {
 
     func start() {
         poll()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        scheduleTimer(Self.envInterval ?? 1.0)
+        let claudeSessions = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/sessions").path
+        watcher = FileWatcher(paths: [claudeSessions, HookStore.dir.path]) { [weak self] in
+            Task { @MainActor in self?.poll() }
+        }
+    }
+
+    private func scheduleTimer(_ every: TimeInterval) {
+        timer?.invalidate()
+        interval = every
+        timer = Timer.scheduledTimer(withTimeInterval: every, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.poll() }
         }
     }
@@ -66,12 +84,14 @@ final class AgentStore: ObservableObject {
     private var lastHooks: [String: HookEvent] = [:]
 
     private func poll() {
-        guard !busy else { return }
+        // Un relevé est déjà en cours : on en refera un juste après (sans en empiler plusieurs).
+        guard !busy else { pendingPoll = true; return }
         busy = true
         Task { @MainActor [weak self] in
             let snap = await Task.detached(priority: .utility) { Self.collect() }.value
             self?.apply(snap)
             self?.busy = false
+            if self?.pendingPoll == true { self?.pendingPoll = false; self?.poll() }
         }
     }
 
@@ -133,10 +153,14 @@ final class AgentStore: ObservableObject {
 
             if new != old.state, new.needsAttention, !firstPoll {
                 record(agent)
+                if Self.debug { FileHandle.standardError.write("\(Date().timeIntervalSince1970) alert \(agent.id) \(new)\n".data(using: .utf8)!) }
                 if !userHere { alerts.send(agent) }
             }
         }
         tracks = tracks.filter { id, _ in result.contains(where: { $0.id == id }) }
+        // Sans agent « heuristique », les fichiers de statut suffisent : on relâche le polling de secours.
+        let wanted = Self.envInterval ?? (result.contains { snap.claude[$0.id]?.status == nil } ? 1.0 : 3.0)
+        if wanted != interval { scheduleTimer(wanted) }
         result.sort { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }
         if result != agents { agents = result }
 
