@@ -5,6 +5,7 @@ let package = Package(
     name: "TmuxIsland",
     platforms: [.macOS(.v14)],
     targets: [
-        .executableTarget(name: "TmuxIsland", path: "Sources/TmuxIsland")
+        .executableTarget(name: "TmuxIsland", path: "Sources/TmuxIsland"),
+        .testTarget(name: "TmuxIslandTests", dependencies: ["TmuxIsland"], path: "Tests/TmuxIslandTests"),
     ]
 )
