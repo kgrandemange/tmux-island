@@ -9,6 +9,7 @@ private struct Snapshot {
     var tails: [String: [String]] = [:]
     var clients: [TmuxClient] = []
     var terminalPIDs: Set<Int32> = []
+    var usage: [String: ClaudeUsage.Info] = [:]
 }
 
 private struct Track {
@@ -124,6 +125,10 @@ final class AgentStore: ObservableObject {
         for pane in snap.panes where snap.kinds[pane.id] != nil || snap.hooks[pane.id] != nil {
             snap.tails[pane.id] = TmuxService.capture(pane.id)
         }
+        let sessions = ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
+        for pane in snap.panes where snap.kinds[pane.id] == "claude" {
+            if let sid = sessions[pane.id], let info = ClaudeUsage.info(sessionId: sid) { snap.usage[pane.id] = info }
+        }
         snap.clients = TmuxService.listClients()
         for c in snap.clients {
             for a in [c.pid] + ps.ancestors(of: c.pid) {
@@ -187,7 +192,7 @@ final class AgentStore: ObservableObject {
 
             let agent = Agent(pane: pane, kind: kind, state: new, since: tr.since,
                               message: hook?.message, tail: Screen.meaningful(tail),
-                              screen: Screen.preview(tail))
+                              screen: Screen.preview(tail), usage: snap.usage[pane.id])
             result.append(agent)
 
             if new != old, new.needsAttention, !firstPoll {

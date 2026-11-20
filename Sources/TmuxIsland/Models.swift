@@ -42,6 +42,8 @@ struct Agent: Identifiable, Equatable {
     var tail: [String]
     /// Dernières lignes de l'écran du pane, affichées au survol.
     var screen: [String] = []
+    /// Contexte de la session Claude Code (nil pour les autres agents ou si introuvable).
+    var usage: ClaudeUsage.Info?
 
     var id: String { pane.id }
 

@@ -282,6 +282,7 @@ struct AgentRow: View {
                         Text("\(agent.pane.session) › \(agent.pane.windowName)")
                             .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
                         Spacer(minLength: 4)
+                        if let u = agent.usage { ContextMeter(info: u) }
                         Text(agent.state.label).font(.system(size: 10)).foregroundStyle(agent.state.color)
                         if agent.state != .idle {
                             Text(agent.since, style: .timer).font(.system(size: 10, design: .monospaced))
@@ -345,6 +346,31 @@ struct AgentRow: View {
         })
         .onHover { hover = $0 }
         .onTapGesture { model.onJump?(agent) }
+    }
+}
+
+/// Jauge de remplissage du contexte : grise au repos, orange > 60 %, rouge > 85 %.
+struct ContextMeter: View {
+    let info: ClaudeUsage.Info
+
+    private var color: Color {
+        info.fraction > 0.85 ? AgentState.waiting.color : info.fraction > 0.6 ? AgentState.working.color : Color.white.opacity(0.5)
+    }
+
+    private var label: String {
+        info.tokens >= 1_000_000 ? String(format: "%.1fM", Double(info.tokens) / 1e6) : "\(info.tokens / 1000)k"
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.12)).frame(width: 30, height: 4)
+                Capsule().fill(color).frame(width: max(3, 30 * info.fraction), height: 4)
+            }
+            Text(label).font(.system(size: 9, design: .monospaced)).foregroundStyle(color)
+        }
+        .help("Contexte : \(label) / \(info.window / 1000)k (\(Int(info.fraction * 100)) %)")
+        .padding(.trailing, 6)
     }
 }
 

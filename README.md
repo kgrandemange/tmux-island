@@ -17,6 +17,12 @@ sur le tty ; autres terminaux : activation de l'app).
 - **Valider (↵)** une demande de permission et **répondre** depuis l'île sans changer de fenêtre (`tmux send-keys`).
 - **Auto-acquittement** : un « terminé » disparaît quand tu regardes déjà le pane.
 - **Sessions** : toutes tes sessions/fenêtres tmux en chips cliquables (pastille d'état si un agent y tourne).
+- **Contexte de Claude Code** : jauge (barre + jetons, orange > 60 %, rouge > 85 %) sur chaque ligne d'agent Claude, lue
+  en lecture seule dans `~/.claude/sessions` et le transcript de la session (aucune config à modifier).
+  La taille de fenêtre n'étant pas écrite dans le transcript, elle est déduite du nom du modèle
+  (`[1m]` ou famille Claude 5 → 1 M, sinon 200 k) ; à ajuster avec
+  `defaults write dev.kevin.tmux-island contextWindow -int 200000`.
+- Pas de coût en dollars : il ne peut pas être recalculé fiablement depuis les transcripts (les tarifs effectifs varient).
 - Détection d'un `Esc` (interruption) sans hook `Stop` en recoupant avec l'écran du pane.
 
 ## Installation
