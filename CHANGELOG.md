@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-11-21
+
+### Fixed
+- The "+N" counter of the compact island was cut by the edge of the island with 7 or more agents. It now always fits
+  (up to six dots, then four dots and the counter).
+- With many sessions, the bottom of the expanded island (the sessions and the shortcuts) was pushed out of its window.
+  The list of sessions now scrolls after five rows.
+
+### Added
+- An "All agents" row in the expanded island when the compact island cannot show every agent: one dot per agent,
+  with the agent's name on hover and a click to jump to it.
+
 ## [1.1.0] - 2026-11-21
 
 ### Added
