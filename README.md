@@ -24,10 +24,14 @@
 </p>
 
 <p align="center">
+  <img src="docs/assets/demo.gif" width="720" alt="An agent finishes, the island announces it, one click lands on the right pane">
+</p>
+
+<p align="center">
   <img src="docs/assets/island-expanded.png" width="720" alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent, and the tmux sessions">
 </p>
 
-> Screenshot data is fictional (projects "shop-web", "shop-api", "shop-infra"). The app's interface is currently in French.
+> Screenshot data is fictional (projects "shop-web", "shop-api", "shop-infra"). The interface is available in English and French and follows your system language.
 
 ## Why
 
@@ -37,9 +41,23 @@ session, *which* window, *which* pane.
 
 TmuxIsland lives around your Mac's notch (or as a pill at the top of the screen):
 
-- **at a glance**: one dot per agent: red if it waits for you, green if it finished, orange while it works;
+- **at a glance**: one dot per agent: red if it waits for you, green if it finished, orange while it works, and a
+  calm **blue ring** when its turn is over but background shells or sub-agents are still running (no false "done" alert);
 - **right on time**: a toast announces a finished task, with a sound, on the screen you are looking at;
-- **in one click**: you land on the right tmux pane **and** the right terminal, with nothing to search for.
+- **in one click**: you land on the right tmux pane **and** the right terminal, with nothing to search for;
+- **or without the mouse**: like tmux itself, everything has a keyboard shortcut (see below).
+
+## Keyboard first, like tmux
+
+You never need the mouse. Global shortcuts (configurable in **Settings…**) work from any app, and once the island is
+open every agent has a number:
+
+| Shortcut | Action |
+|---|---|
+| `⌃⌥Space` | Open / close the island |
+| `⌃⌥J` | Jump to the next agent to handle (oldest "waiting" or "done") |
+| `1`–`9` | Go to agent *n* (number row or keypad; on AZERTY no Shift needed) |
+| `J` / `F` / `Esc` | Next to handle / focus mode / close |
 
 ## Built for tmux, not for a terminal
 
@@ -76,6 +94,8 @@ iTerm2, kitty, Alacritty, Terminal.app…), whether your sessions are local, lon
 - **Follow the active screen**: the island and its alerts come to where your cursor is (multi-display).
 - **Auto-acknowledge**: a "done" disappears when you are already looking at the pane.
 - **All your tmux sessions** at a glance, with full window names.
+
+<p align="center"><img src="docs/assets/demo-background.gif" width="640" alt="Background shells running: a blue ring, no false alert"></p>
 
 <p align="center"><img src="docs/assets/island-preview.png" width="640" alt="Pane preview when hovering a running agent"></p>
 

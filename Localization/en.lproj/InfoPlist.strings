@@ -1,0 +1,2 @@
+/* Texts macOS shows itself (permission prompts). */
+"NSAppleEventsUsageDescription" = "To select the right tab in iTerm2 / Terminal.";

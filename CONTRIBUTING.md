@@ -41,7 +41,12 @@ pane).
 - Add or update tests when you change behavior (the state machine and the screen parsers are easy to cover).
 - Run `swift test` before pushing; CI runs it on Apple Silicon.
 - Do not include personal data in a diff (paths, names, project names, tokens), including in screenshots.
-- The interface is currently in French; translations are welcome but please open an issue first so we agree on the approach.
+- **Translations**: the interface strings live in `Localization/<language>.lproj/Localizable.strings` (English and French
+  today), plus `InfoPlist.strings` for the macOS permission prompt. To add a language, copy `Localization/en.lproj` to
+  `Localization/<code>.lproj`, translate the values (keep the keys and the `%@` / `%d` placeholders), and add the code to
+  `CFBundleLocalizations` in `scripts/bundle.sh`. `swift test` checks that every language has the same keys and placeholders.
+  Force a language when trying it: `TMUXISLAND_LANG=fr`.
+- Never hard-code user-facing text: use `L10n.tr("key")` (or `L10n.plural`) and add the key to every language.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
 
 ## About AI-assisted code

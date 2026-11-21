@@ -82,7 +82,7 @@ struct IslandView: View {
             .frame(width: model.toastWing - 8, alignment: .trailing)
             .padding(.trailing, 8)
             Spacer(minLength: 0).frame(width: model.notchW - 12)
-            Text(t.state == .waiting ? "attend" : "terminé")
+            Text(t.state == .waiting ? L10n.tr("toast.waiting") : L10n.tr("toast.done"))
                 .font(.system(size: 11, weight: .semibold)).foregroundStyle(t.state.color)
                 .frame(width: model.toastWing - 8, alignment: .leading)
                 .padding(.leading, 8)
@@ -162,7 +162,7 @@ struct IslandView: View {
                 Button { model.onToggleFocus?() } label: {
                     HStack(spacing: 4) {
                         Image(systemName: model.focusMode ? "moon.fill" : "moon")
-                        Text("Concentration").font(.system(size: 10, weight: .medium))
+                        Text(L10n.tr("island.focus")).font(.system(size: 10, weight: .medium))
                     }
                     .foregroundStyle(model.focusMode ? Color(red: 0.68, green: 0.55, blue: 1.0) : Color.white.opacity(0.5))
                     .padding(.horizontal, 8).padding(.vertical, 3)
@@ -188,9 +188,9 @@ struct IslandView: View {
     private var agentsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             if store.visibleAgents.isEmpty {
-                Text(!store.tmuxRunning ? "tmux n'est pas lancé."
-                     : store.agents.isEmpty ? "Aucun agent IA détecté dans tes sessions tmux."
-                     : "Rien à traiter — \(store.idleCount) agent(s) inactif(s).")
+                Text(!store.tmuxRunning ? L10n.tr("empty.tmuxDown")
+                     : store.agents.isEmpty ? L10n.tr("empty.noAgent")
+                     : L10n.plural("empty.idle", store.idleCount))
                     .font(.system(size: 12)).foregroundStyle(.secondary).padding(.vertical, 6)
             } else {
                 let rows = ForEach(Array(store.visibleAgents.enumerated()), id: \.element.id) { i, agent in
@@ -212,7 +212,7 @@ struct IslandView: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: model.historyOpen ? "chevron.down" : "chevron.right").font(.system(size: 8, weight: .bold))
-                    Text("RÉCENTS").font(.system(size: 9, weight: .semibold)).tracking(1)
+                    Text(L10n.tr("section.recent")).font(.system(size: 9, weight: .semibold)).tracking(1)
                     Text("\(min(store.history.count, 10))").font(.system(size: 9, weight: .semibold, design: .rounded))
                 }
                 .foregroundStyle(.tertiary)
@@ -229,7 +229,7 @@ struct IslandView: View {
 
     private var sessionsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("SESSIONS").font(.system(size: 9, weight: .semibold)).tracking(1).foregroundStyle(.tertiary)
+            Text(L10n.tr("section.sessions")).font(.system(size: 9, weight: .semibold)).tracking(1).foregroundStyle(.tertiary)
             ForEach(store.sessions) { s in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(s.displayName).font(.system(size: 11, weight: .semibold)).foregroundStyle(s.attached ? .primary : .secondary)
@@ -242,10 +242,10 @@ struct IslandView: View {
 
     private var footer: some View {
         HStack(spacing: 14) {
-            Hint(key: "1-9", text: "aller à l'agent")
-            Hint(key: "J", text: "prochain à traiter")
-            Hint(key: "F", text: "concentration")
-            Hint(key: "Esc", text: "fermer")
+            Hint(key: "1-9", text: L10n.tr("hint.goto"))
+            Hint(key: "J", text: L10n.tr("hint.next"))
+            Hint(key: "F", text: L10n.tr("hint.focus"))
+            Hint(key: "Esc", text: L10n.tr("hint.close"))
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }

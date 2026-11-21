@@ -129,7 +129,7 @@
     </div>
     <div class="grid">
       <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-dots"/></svg></div>
-        <h3 data-en="One dot per agent">Un point par agent</h3><p data-en="Red if it waits for you, green if it's done, orange while it works. Always visible around the notch.">Rouge s'il t'attend, vert s'il a fini, orange pendant qu'il travaille. Toujours visible autour de la notch.</p></article>
+        <h3 data-en="One dot per agent">Un point par agent</h3><p data-en="Red if it waits for you, green if it's done, orange while it works, and a calm blue ring while background shells or sub-agents are still running. Always visible at the top of your screen.">Rouge s'il t'attend, vert s'il a fini, orange pendant qu'il travaille, et une bague bleue calme tant que des shells ou sous-agents tournent en arrière-plan. Toujours visible en haut de l'écran.</p></article>
       <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-click"/></svg></div>
         <h3 data-en="One click, the right pane">Un clic, le bon pane</h3><p data-en="Window, pane and terminal: you land exactly where the agent is waiting for you.">Fenêtre, pane et terminal : tu arrives exactement là où l'agent t'attend.</p></article>
       <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg></div>
@@ -145,7 +145,7 @@
       <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-screens"/></svg></div>
         <h3 data-en="Multi-display">Multi-écrans</h3><p data-en="The island and its alerts follow your cursor from one screen to the other.">L'île et ses alertes suivent ton curseur d'un écran à l'autre.</p></article>
       <article class="card feat reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#i-key"/></svg></div>
-        <h3 data-en="Global shortcuts">Raccourcis globaux</h3><p data-en="Open the island, jump to the next agent to handle, toggle focus. All configurable.">Ouvre l'île, saute au prochain agent à traiter, active la concentration. Tout est configurable.</p></article>
+        <h3 data-en="Keyboard first">Tout au clavier</h3><p data-en="Like tmux, no mouse needed: global shortcuts to open the island, jump to the next agent to handle or toggle focus, and 1–9 to go to an agent (no Shift needed on AZERTY). All configurable.">Comme tmux, la souris est facultative : raccourcis globaux pour ouvrir l'île, sauter au prochain agent à traiter ou activer la concentration, et 1–9 pour aller à un agent (sans Maj en AZERTY). Tout est configurable.</p></article>
     </div>
   </div>
 </section>
@@ -159,13 +159,13 @@
       <p class="sub" data-en="Screenshots use fictional projects.">Les captures utilisent des projets fictifs.</p>
     </div>
     <div class="shots">
-      <figure class="card reveal"><img src="assets/island-expanded.png" width="760" height="520" loading="lazy" alt="L'île dépliée : un agent en attente avec boutons de validation, un agent terminé, un agent en cours et les sessions tmux" data-en-alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent and the tmux sessions">
+      <figure class="card reveal"><img src="assets/island-expanded.png" data-src-en="assets/island-expanded.png" data-src-fr="assets/island-expanded-fr.png" width="760" height="520" loading="lazy" alt="L'île dépliée : un agent en attente avec boutons de validation, un agent terminé, un agent en cours et les sessions tmux" data-en-alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent and the tmux sessions">
         <figcaption data-en="<b>Expanded.</b> Agents sorted by urgency, real approval buttons, and every tmux session as clickable chips."><b>Dépliée.</b> Les agents triés par urgence, de vrais boutons de validation, et toutes tes sessions tmux en puces cliquables.</figcaption></figure>
-      <figure class="card reveal"><img src="assets/island-preview.png" width="760" height="640" loading="lazy" alt="Aperçu des dernières lignes du pane au survol d'un agent en cours" data-en-alt="Preview of the pane's last lines when hovering a running agent">
+      <figure class="card reveal"><img src="assets/island-preview.png" data-src-en="assets/island-preview.png" data-src-fr="assets/island-preview-fr.png" width="760" height="640" loading="lazy" alt="Aperçu des dernières lignes du pane au survol d'un agent en cours" data-en-alt="Preview of the pane's last lines when hovering a running agent">
         <figcaption data-en="<b>Peek.</b> Hover an agent to read the real end of its pane, with a context gauge for Claude Code."><b>Aperçu.</b> Survole un agent pour lire la vraie fin de son pane, avec la jauge de contexte pour Claude Code.</figcaption></figure>
-      <figure class="card reveal"><img src="assets/island-toast.png" width="560" height="90" loading="lazy" alt="Toast : le projet shop-infra est terminé" data-en-alt="Toast: the shop-infra project is done">
+      <figure class="card reveal"><img src="assets/island-toast.png" data-src-en="assets/island-toast.png" data-src-fr="assets/island-toast-fr.png" width="560" height="90" loading="lazy" alt="Toast : le projet shop-infra est terminé" data-en-alt="Toast: the shop-infra project is done">
         <figcaption data-en="<b>The toast.</b> An agent finishes: the island widens for a few seconds. One click and you're there."><b>Le toast.</b> Un agent finit : l'île s'élargit quelques secondes. Un clic et tu y es.</figcaption></figure>
-      <figure class="card reveal"><img src="assets/island-compact.png" width="560" height="90" loading="lazy" alt="Île compacte avec un point par agent" data-en-alt="Compact island with one dot per agent">
+      <figure class="card reveal"><img src="assets/island-compact.png" data-src-en="assets/island-compact.png" data-src-fr="assets/island-compact-fr.png" width="560" height="90" loading="lazy" alt="Île compacte avec un point par agent" data-en-alt="Compact island with one dot per agent">
         <figcaption data-en="<b>At rest.</b> One dot per agent, and the number of tmux sessions."><b>Au repos.</b> Un point par agent, et le nombre de sessions tmux.</figcaption></figure>
     </div>
   </div>

@@ -45,9 +45,9 @@ enum ShortcutAction: String, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .toggle: return "Ouvrir / fermer l'île"
-        case .next: return "Aller au prochain agent à traiter"
-        case .focus: return "Mode concentration"
+        case .toggle: return L10n.tr("shortcut.toggle")
+        case .next: return L10n.tr("shortcut.next")
+        case .focus: return L10n.tr("shortcut.focus")
         }
     }
 
@@ -81,9 +81,9 @@ final class ShortcutStore: ObservableObject {
     /// Rejects a shortcut with no modifier or already used by another action; returns the reason for the refusal.
     @discardableResult
     func set(_ s: Shortcut, for a: ShortcutAction) -> String? {
-        guard s.isValidGlobal else { return "Ajoute au moins ⌃, ⌥ ou ⌘." }
+        guard s.isValidGlobal else { return L10n.tr("shortcut.error.modifier") }
         if let other = ShortcutAction.allCases.first(where: { $0 != a && shortcut($0) == s }) {
-            return "Déjà utilisé par « \(other.title) »."
+            return L10n.tr("shortcut.error.used", other.title)
         }
         shortcuts[a] = s
         persist()

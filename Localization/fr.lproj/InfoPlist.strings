@@ -1,0 +1,2 @@
+/* Textes affichés par macOS lui-même (demandes d'autorisation). */
+"NSAppleEventsUsageDescription" = "Pour sélectionner le bon onglet dans iTerm2 / Terminal.";

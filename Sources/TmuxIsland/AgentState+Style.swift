@@ -13,11 +13,11 @@ extension AgentState {
 
     var label: String {
         switch self {
-        case .working: return "en cours"
-        case .waiting: return "en attente"
-        case .done: return "terminé"
-        case .background: return "en arrière-plan"
-        case .idle: return "inactif"
+        case .working: return L10n.tr("state.working")
+        case .waiting: return L10n.tr("state.waiting")
+        case .done: return L10n.tr("state.done")
+        case .background: return L10n.tr("state.background")
+        case .idle: return L10n.tr("state.idle")
         }
     }
 }

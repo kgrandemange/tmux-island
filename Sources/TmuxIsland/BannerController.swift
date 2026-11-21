@@ -66,11 +66,11 @@ struct BannerView: View {
                     Text(agent.displayName).font(.system(size: 12, weight: .semibold))
                     Text(agent.pane.project).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
                 }
-                Text(agent.state == .waiting ? "attend ta réponse" : "a terminé")
+                Text(agent.state == .waiting ? L10n.tr("banner.waiting") : L10n.tr("banner.done"))
                     .font(.system(size: 11)).foregroundStyle(agent.state.color)
             }
             Spacer(minLength: 0)
-            Text("Y aller ›").font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
+            Text(L10n.tr("banner.go")).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 14)
         .frame(width: 380, height: 52)
