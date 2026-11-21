@@ -26,7 +26,7 @@ struct HistoryRow: View {
     }
 }
 
-/// Mise en page « flux » : les éléments passent à la ligne au lieu d'être tronqués.
+/// "Flow" layout: items wrap to the next line instead of being truncated.
 struct WrapLayout: Layout {
     var spacing: CGFloat = 5
 

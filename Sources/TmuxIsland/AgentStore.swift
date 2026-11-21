@@ -14,7 +14,7 @@ final class AgentStore: ObservableObject {
         return h
     }()
 
-    /// Émis quand un agent passe en « terminé » ou « attend une réponse ».
+    /// Emitted when an agent becomes "done" or "waiting" for an answer.
     let alerts = PassthroughSubject<Agent, Never>()
 
     private var tracks: [String: Track] = [:]
@@ -25,12 +25,12 @@ final class AgentStore: ObservableObject {
     private var interval: TimeInterval = 1.0
     private var watcher: FileWatcher?
 
-    /// Cadence de relevé de secours : 1 s tant qu'un agent n'a pas de statut officiel (heuristique d'écran),
-    /// sinon 3 s. Les changements de fichiers déclenchent un relevé immédiat. Surchargeable pour les tests.
+    /// Fallback polling interval: 1 s while an agent has no official status (screen heuristics),
+    /// otherwise 3 s. File changes trigger an immediate refresh. Overridable for tests.
     private static let debug = ProcessInfo.processInfo.environment["TMUXISLAND_DEBUG"] != nil
     private static let envInterval = ProcessInfo.processInfo.environment["TMUXISLAND_POLL_INTERVAL"].flatMap(Double.init)
 
-    /// Agents affichés en lignes dans l'île : tout sauf les inactifs (ceux-ci restent accessibles via les sessions).
+    /// Agents shown as rows in the island: everything except idle ones (those stay reachable through the sessions).
     var visibleAgents: [Agent] { agents.filter { $0.state != .idle } }
     var idleCount: Int { agents.count - visibleAgents.count }
     var attentionAgents: [Agent] { agents.filter { $0.state.needsAttention } }
@@ -57,7 +57,7 @@ final class AgentStore: ObservableObject {
         }
     }
 
-    /// Prochain agent à traiter : en attente d'abord, puis terminés, du plus ancien au plus récent.
+    /// Next agent to handle: waiting ones first, then finished ones, oldest first.
     func nextAttention() -> Agent? {
         attentionAgents.sorted { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }.first
     }
@@ -76,7 +76,7 @@ final class AgentStore: ObservableObject {
     private var lastHooks: [String: HookEvent] = [:]
 
     private func poll() {
-        // Un relevé est déjà en cours : on en refera un juste après (sans en empiler plusieurs).
+        // A refresh is already running: do one more right after it (without stacking several).
         guard !busy else { pendingPoll = true; return }
         busy = true
         Task { @MainActor [weak self] in
@@ -126,13 +126,13 @@ final class AgentStore: ObservableObject {
             }
         }
         tracks = tracks.filter { id, _ in result.contains(where: { $0.id == id }) }
-        // Sans agent « heuristique », les fichiers de statut suffisent : on relâche le polling de secours.
+        // With no "heuristic" agent, the status files are enough: relax the fallback polling.
         let wanted = Self.envInterval ?? (result.contains { snap.claude[$0.id]?.status == nil } ? 1.0 : 3.0)
         if wanted != interval { scheduleTimer(wanted) }
         result.sort { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }
         if result != agents { agents = result }
 
-        // Sessions / fenêtres
+        // Sessions and windows
         var sess: [String: TmuxSession] = [:]
         for pane in snap.panes {
             let key = "\(pane.server ?? "")|\(pane.session)"
@@ -149,7 +149,7 @@ final class AgentStore: ObservableObject {
         firstPoll = false
     }
 
-    /// Charge des données fictives (documentation, captures d'écran) sans interroger tmux.
+    /// Loads fictional data (documentation, screenshots) without querying tmux.
     func loadDemo() {
         let d = DemoData.make()
         agents = d.agents
@@ -168,7 +168,7 @@ final class AgentStore: ObservableObject {
         if !DemoMode.active, let d = try? JSONEncoder().encode(history) { UserDefaults.standard.set(d, forKey: "history") }
     }
 
-    /// Pane actuel correspondant à une entrée (même pane, sinon la fenêtre) ; nil si la session n'existe plus.
+    /// Current pane matching an entry (same pane, else its window); nil if the session no longer exists.
     func target(for e: HistoryEntry) -> Pane? {
         let all = sessions.flatMap(\.windows).flatMap(\.panes)
         if let p = all.first(where: { $0.id == e.paneID && $0.session == e.session }) { return p }

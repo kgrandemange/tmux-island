@@ -16,8 +16,8 @@ enum Shell {
     }
 }
 
-/// Table des processus (ps) pour retrouver les agents IA lancés sous chaque pane
-/// et remonter du client tmux jusqu'à l'application terminal.
+/// Process table (ps) used to find the AI agents started under each pane
+/// and to walk up from a tmux client to the terminal application.
 struct ProcessTable {
     private(set) var cmd: [Int32: String] = [:]
     private(set) var parent: [Int32: Int32] = [:]
@@ -86,13 +86,13 @@ enum TmuxService {
 
     private static let sep = "|~|"
 
-    /// `server` = chemin d'un socket (`tmux -S`) ; nil = serveur par défaut.
+    /// `server` = a socket path (`tmux -S`); nil = the default server.
     @discardableResult
     static func run(_ args: [String], server: String? = nil) -> (out: String, status: Int32) {
         Shell.run(path, (server.map { ["-S", $0] } ?? []) + args)
     }
 
-    /// Serveur par défaut + tous les sockets présents dans le dossier de tmux (`tmux -L nom`, `-S chemin`…).
+    /// The default server + every socket found in tmux's directory (`tmux -L name`, `-S path`…).
     static func discoverServers() -> [String?] {
         if let demo = DemoMode.socketPath { return [demo] }
         var servers: [String?] = [nil]
@@ -141,7 +141,7 @@ enum TmuxService {
         }
     }
 
-    /// Dernières lignes significatives de l'écran du pane.
+    /// Last meaningful lines of the pane's screen.
     static func capture(_ pane: Pane) -> [String] {
         let res = run(["capture-pane", "-p", "-J", "-t", pane.tmuxID], server: pane.server)
         guard res.status == 0 else { return [] }
@@ -165,7 +165,7 @@ enum HookStore {
         return base.appendingPathComponent("tmux-island")
     }()
 
-    /// Crée le dossier d'état en mode privé (0700) : les messages des agents n'ont pas à être lisibles par les autres comptes.
+    /// Creates the state directory in private mode (0700): agent messages should not be readable by other accounts.
     static func ensureDir() {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
@@ -176,7 +176,7 @@ enum HookStore {
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }
         var result: [String: HookEvent] = [:]
         for url in files where url.pathExtension == "json" {
-            // « 56.json » (serveur par défaut) ou « socket__56.json » (autre serveur) — écrit par tmux-island-hook.
+            // "56.json" (default server) or "socket__56.json" (other server) — written by tmux-island-hook.
             let stem = url.deletingPathExtension().lastPathComponent
             let id: String
             if let r = stem.range(of: "__") { id = "\(stem[..<r.lowerBound]):%\(stem[r.upperBound...])" } else { id = "%" + stem }

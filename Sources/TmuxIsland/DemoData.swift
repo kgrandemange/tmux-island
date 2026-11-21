@@ -1,8 +1,8 @@
 import Foundation
 
-/// Mode démo en direct : `TmuxIsland --demo-server NOM` ne montre que le serveur tmux `tmux -L NOM`.
-/// L'historique est éphémère, les fichiers de sessions Claude et le nettoyage des hooks sont ignorés :
-/// on peut filmer l'app sans exposer ses vraies sessions ni toucher à ses vrais fichiers.
+/// Live demo mode: `TmuxIsland --demo-server NAME` only shows the tmux server `tmux -L NAME`.
+/// History is in-memory, Claude session files and hook cleanup are ignored:
+/// the app can be filmed without exposing real sessions or touching real files.
 enum DemoMode {
     static let server: String? = {
         let a = CommandLine.arguments
@@ -10,7 +10,7 @@ enum DemoMode {
         return a[i + 1]
     }()
 
-    /// Un nom de socket tmux : lettres, chiffres, `.`, `_`, `-` (pas de `/` ni de `..`).
+    /// A tmux socket name: letters, digits, `.`, `_`, `-` (no `/`, no `..`).
     static func isValidName(_ s: String) -> Bool {
         s.range(of: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$", options: .regularExpression) != nil && !s.contains("..")
     }
@@ -18,7 +18,7 @@ enum DemoMode {
     static var socketPath: String? { server.map { "/private/tmp/tmux-\(getuid())/\($0)" } }
 }
 
-/// Données fictives pour la documentation et les captures (jamais utilisées en fonctionnement normal).
+/// Fictional data for the documentation and screenshots (never used in normal operation).
 enum DemoData {
     static func make(now: Date = Date()) -> (agents: [Agent], sessions: [TmuxSession], history: [HistoryEntry]) {
         func pane(_ id: String, _ session: String, _ win: Int, _ name: String, _ path: String, active: Bool = false) -> Pane {

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Mini-bannière affichée sur l'écran où travaille l'utilisateur quand l'île (sur la notch) est sur un autre écran.
+/// Small banner shown on the screen the user is working on when the island (on the notch) is on another screen.
 @MainActor
 final class BannerController {
     private var panel: NSPanel?

@@ -2,7 +2,7 @@ import AppKit
 import ServiceManagement
 import SwiftUI
 
-/// Réglages modifiables depuis la fenêtre ; chaque changement est répercuté par les closures.
+/// Settings editable from the window; every change is relayed through the closures.
 @MainActor
 final class SettingsModel: ObservableObject {
     @Published var followScreen = false { didSet { if followScreen != oldValue { onFollowScreen?(followScreen) } } }
@@ -70,7 +70,7 @@ private struct ShortcutRow: View {
         error = nil
         recording = true
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 53 { stop(); return nil } // Échap : annuler
+            if event.keyCode == 53 { stop(); return nil } // Escape: cancel
             let s = Shortcut(keyCode: UInt32(event.keyCode), modifiers: Shortcut.carbonModifiers(event.modifierFlags))
             error = store.set(s, for: action)
             stop()

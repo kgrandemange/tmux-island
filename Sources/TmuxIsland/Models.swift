@@ -1,11 +1,11 @@
 import Foundation
 
 enum AgentState: String {
-    /// `background` : le tour de l'agent est fini mais des shells / sous-agents tournent encore en arrière-plan
-    /// (statut `shell` de Claude Code). L'agent peut se réveiller ; ce n'est ni « en cours » ni « terminé ».
+    /// `background`: the agent's turn is over but shells / sub-agents are still running in the background
+    /// (Claude Code's `shell` status). The agent may wake up; it is neither "running" nor "done".
     case waiting, done, working, background, idle
 
-    /// Plus petit = plus urgent.
+    /// Smaller = more urgent.
     var priority: Int {
         switch self {
         case .waiting: return 0
@@ -20,26 +20,26 @@ enum AgentState: String {
 }
 
 struct Pane: Identifiable, Hashable {
-    let id: String            // unique entre serveurs : « %12 » (serveur par défaut) ou « socket:%12 »
-    let tmuxID: String        // identifiant tmux brut (« %12 »), pour les commandes
-    let server: String?       // chemin du socket tmux (nil = serveur par défaut)
+    let id: String            // unique across servers: "%12" (default server) or "socket:%12"
+    let tmuxID: String        // raw tmux id ("%12"), for commands
+    let server: String?       // tmux socket path (nil = default server)
     let session: String
     let windowIndex: Int
     let windowName: String
     let paneIndex: Int
     let path: String
     let pid: Int32
-    let paneActive: Bool      // pane active dans sa fenêtre
-    let windowActive: Bool    // fenêtre active dans sa session
+    let paneActive: Bool      // active pane in its window
+    let windowActive: Bool    // active window in its session
     let sessionAttached: Bool
 
     var isFocusedInSession: Bool { paneActive && windowActive }
     var project: String { (path as NSString).lastPathComponent }
-    /// Clé de correspondance avec `~/.claude/sessions/*.json` (champ `tmux` : « session:@fenêtre.%pane »).
+    /// Matching key with `~/.claude/sessions/*.json` (`tmux` field: "session:@window.%pane").
     var claudeKey: String { "\(session)|\(tmuxID)" }
 }
 
-/// Un choix proposé par un menu de validation (« 1. Yes », « 2. Yes, and don't ask again… », « 3. No »).
+/// A choice offered by a permission menu ("1. Yes", "2. Yes, and don't ask again…", "3. No").
 struct PermissionOption: Equatable, Identifiable {
     let number: Int
     let label: String
@@ -63,13 +63,13 @@ struct Agent: Identifiable, Equatable {
     var since: Date
     var message: String?
     var tail: [String]
-    /// Dernières lignes de l'écran du pane, affichées au survol.
+    /// Last lines of the pane's screen, shown on hover.
     var screen: [String] = []
-    /// Contexte de la session Claude Code (nil pour les autres agents ou si introuvable).
+    /// Claude Code session context (nil for other agents or if not found).
     var usage: ClaudeUsage.Info?
-    /// Choix du menu de validation affiché à l'écran (vide si aucun menu n'est en attente).
+    /// Choices of the permission menu displayed on screen (empty if no menu is pending).
     var options: [PermissionOption] = []
-    /// Précision d'état lue à l'écran (ex. « 2 shells », « 3 tâches de fond » pour l'état `background`).
+    /// State detail read from the screen (e.g. "2 shells", "3 background tasks" for the `background` state).
     var detail: String?
 
     var id: String { pane.id }
@@ -92,7 +92,7 @@ struct Agent: Identifiable, Equatable {
     }
 }
 
-/// Une fin d'agent (terminé / en attente), conservée pour retrouver ce qu'on a raté.
+/// An agent finishing (done / waiting), kept so you can find what you missed.
 struct HistoryEntry: Codable, Identifiable, Equatable {
     var id = UUID()
     let paneID: String
@@ -120,7 +120,7 @@ struct TmuxSession: Identifiable {
     let attached: Bool
     var windows: [TmuxWindow]
     var id: String { "\(server ?? "")|\(name)" }
-    /// Les sessions d'un serveur tmux secondaire (`tmux -L nom`) sont suffixées par le nom du socket.
+    /// Sessions of a secondary tmux server (`tmux -L name`) get the socket name as a suffix.
     var displayName: String { DemoMode.active ? name : server.map { "\(name) (\(($0 as NSString).lastPathComponent))" } ?? name }
 }
 

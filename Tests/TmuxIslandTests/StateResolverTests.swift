@@ -16,7 +16,7 @@ final class StateResolverTests: XCTestCase {
         return StateResolver.resolve(old: old, signals: s)
     }
 
-    // MARK: - Statut officiel de la session
+    // MARK: - Official session status
 
     func testBusyMeansWorking() {
         XCTAssertEqual(resolve { $0.sessionStatus = "busy" }.state, .working)
@@ -105,7 +105,7 @@ final class StateResolverTests: XCTestCase {
     }
 
     func testHookWorkingWithoutScreenActivityAfterGraceMeansInterrupted() {
-        // Esc : aucun hook Stop n'est émis, l'écran ne montre plus « esc to interrupt ».
+        // Esc: no Stop hook is emitted, the screen no longer shows "esc to interrupt".
         XCTAssertEqual(resolve { $0.hook = hook("working", at: -20) }.state, .idle)
     }
 
@@ -128,7 +128,7 @@ final class StateResolverTests: XCTestCase {
         XCTAssertEqual(resolve { $0.hook = hook("waiting") }.state, .waiting)
     }
 
-    // MARK: - Sans statut ni hook : heuristique d'écran seule
+    // MARK: - No status and no hook: screen heuristics only
 
     func testScreenOnlyWorkingThenQuietMeansDone() {
         let working = resolve { $0.screenWorking = true }
@@ -281,7 +281,7 @@ final class PermissionOptionsTests: XCTestCase {
     }
 }
 
-/// Envoie de vraies touches dans un serveur tmux privé (ignoré si tmux est absent).
+/// Sends real keys to a private tmux server (skipped when tmux is missing).
 final class ChooseOptionIntegrationTests: XCTestCase {
     private var sock = ""
 
@@ -310,7 +310,7 @@ final class ChooseOptionIntegrationTests: XCTestCase {
         throw XCTSkip("le menu de test ne s'est pas affiché")
     }
 
-    /// Variante 1 : le chiffre valide immédiatement.
+    /// Variant 1: the digit confirms immediately.
     func testDigitThatConfirmsImmediately() throws {
         let pane = startMenu(script: #"printf 'Do you want to proceed?\n❯ 1. Yes\n  2. No\n'; read -rsn1 k; echo "GOT:$k"; sleep 30"#)
         let options = try waitForMenu(pane)
@@ -320,7 +320,7 @@ final class ChooseOptionIntegrationTests: XCTestCase {
         XCTAssertTrue(screen.contains("GOT:2"), screen)
     }
 
-    /// Variante 2 : le chiffre ne fait que déplacer la sélection, Entrée valide.
+    /// Variant 2: the digit only moves the selection, Enter confirms.
     func testDigitThatOnlyMovesTheSelectionNeedsEnter() throws {
         let script = #"""
         sel=1

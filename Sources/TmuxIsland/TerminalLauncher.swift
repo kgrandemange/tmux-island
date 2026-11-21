@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-/// Ouvre un terminal qui s'attache à une session tmux (quand aucun client n'est affiché), pour les terminaux courants.
+/// Opens a terminal that attaches to a tmux session (when no client displays it), for the common terminals.
 enum TerminalLauncher {
     enum Launch: Equatable {
         case process(String, [String])
@@ -13,7 +13,7 @@ enum TerminalLauncher {
         "net.kovidgoyal.kitty", "org.alacritty", "com.apple.Terminal",
     ]
 
-    /// Commande à lancer pour exécuter `argv` dans un nouveau terminal `bundleID`.
+    /// Command to run `argv` in a new `bundleID` terminal.
     static func launch(bundleID: String, argv: [String]) -> Launch {
         let command = argv.map(shellQuote).joined(separator: " ")
         switch bundleID {
@@ -30,7 +30,7 @@ enum TerminalLauncher {
             return .process("/usr/bin/open", ["-n", "-b", bundleID, "--args", "-e"] + argv)
         case "net.kovidgoyal.kitty":
             return .process("/usr/bin/open", ["-n", "-b", bundleID, "--args"] + argv)
-        default: // Terminal.app et terminaux sans CLI connue
+        default: // Terminal.app and terminals with no known CLI
             return .appleScript("""
             tell application "Terminal"
               activate
@@ -40,7 +40,7 @@ enum TerminalLauncher {
         }
     }
 
-    /// Un tty macOS ressemble à `/dev/ttys003` : on refuse tout le reste avant de l'insérer dans un script.
+    /// A macOS tty looks like `/dev/ttys003`: everything else is refused before being inserted into a script.
     static func isSafeTTY(_ tty: String) -> Bool {
         tty.range(of: "^/dev/tty[A-Za-z0-9]{1,16}$", options: .regularExpression) != nil
     }
@@ -54,7 +54,7 @@ enum TerminalLauncher {
         s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
     }
 
-    /// Terminal à utiliser : le dernier vu avec un client tmux, sinon un terminal déjà ouvert, sinon un installé.
+    /// Terminal to use: the last one seen with a tmux client, else one that is already open, else an installed one.
     static func preferredBundle() -> String {
         func installed(_ id: String) -> Bool { NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) != nil }
         if let last = UserDefaults.standard.string(forKey: "lastTerminalBundle"), installed(last) { return last }

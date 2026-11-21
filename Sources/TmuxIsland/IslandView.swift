@@ -12,9 +12,9 @@ private struct HeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
-/// Apparition du contenu déplié : fondu + léger flou + glissement de quelques pixels.
+/// Appearance of the expanded content: fade + slight blur + a few pixels of slide.
 private struct BlurReveal: ViewModifier {
-    var amount: Double   // 1 = caché, 0 = visible
+    var amount: Double   // 1 = hidden, 0 = visible
     func body(content: Content) -> some View {
         content.opacity(1 - amount).blur(radius: 6 * amount).offset(y: -8 * amount)
     }
@@ -33,7 +33,7 @@ struct IslandView: View {
     @ObservedObject var model: IslandModel
     @ObservedObject private var shortcuts = ShortcutStore.shared
 
-    /// Hauteur de la forme : de la notch à la hauteur du contenu, animée avec la largeur (« morph »).
+    /// Height of the shape: from the notch to the content's height, animated with the width ("morph").
     private var islandHeight: CGFloat? {
         if model.naturalHeight { return nil }
         return model.expanded ? max(model.contentHeight, model.notchH + 60) : model.notchH
@@ -95,7 +95,7 @@ struct IslandView: View {
 
     private var idleCompact: some View {
         HStack(spacing: 0) {
-            // Aile gauche : présence de tmux (toujours visible) + nombre de sessions
+            // Left wing: tmux presence (always visible) + number of sessions
             HStack(spacing: 5) {
                 if model.focusMode {
                     Image(systemName: "moon.fill").font(.system(size: 10, weight: .semibold))
@@ -111,7 +111,7 @@ struct IslandView: View {
             .frame(width: model.wing, alignment: .trailing)
             .padding(.trailing, 6)
             Spacer(minLength: 0).frame(width: model.notchW - 12)
-            // Aile droite : un point par agent, trié par urgence (rouge, vert, orange, gris)
+            // Right wing: one dot per agent, sorted by urgency (red, green, orange, grey)
             HStack(spacing: 4) {
                 if store.agents.isEmpty {
                     Circle().stroke(Color.white.opacity(0.25), lineWidth: 1).frame(width: 7, height: 7)
@@ -132,7 +132,7 @@ struct IslandView: View {
         .onTapGesture { model.onTapCompact?() }
     }
 
-    // MARK: Étendue
+    // MARK: Expanded
 
     private var expanded: some View {
         VStack(spacing: 0) {

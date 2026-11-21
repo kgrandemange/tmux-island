@@ -1,15 +1,15 @@
 import CoreServices
 import Foundation
 
-/// Observe des dossiers (FSEvents) et prévient dès qu'un fichier y est créé, modifié ou supprimé,
-/// y compris quand il est réécrit « en place » (ce que ne voit pas un simple DispatchSource de dossier).
+/// Watches directories (FSEvents) and calls back as soon as a file is created, modified or removed there,
+/// including when it is rewritten "in place" (which a plain directory DispatchSource does not see).
 final class FileWatcher {
     private var stream: FSEventStreamRef?
     private let onChange: () -> Void
 
     init(paths: [String], latency: TimeInterval = 0.1, onChange: @escaping () -> Void) {
         self.onChange = onChange
-        // Les dossiers observés sont créés par leur propriétaire (HookStore.ensureDir) ; on ignore ceux qui n'existent pas.
+        // Watched directories are created by their owner (HookStore.ensureDir); missing ones are ignored.
         let paths = paths.filter { FileManager.default.fileExists(atPath: $0) }
         guard !paths.isEmpty else { return }
         var ctx = FSEventStreamContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(),

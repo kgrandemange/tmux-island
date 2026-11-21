@@ -31,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             controller.debugAnimTest(dir: CommandLine.arguments[i + 1])
         }
 
-        // Raccourcis globaux (modifiables dans les réglages) : réenregistrés à chaque changement.
+        // Global shortcuts (configurable in the settings): re-registered on every change.
         registerHotKeys()
         shortcutSub = ShortcutStore.shared.$shortcuts.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self?.registerHotKeys() }

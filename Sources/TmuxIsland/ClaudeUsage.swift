@@ -7,9 +7,9 @@ struct ClaudeSession: Equatable {
     let name: String?
 }
 
-/// Remplissage du contexte d'une session Claude Code, lu en lecture seule :
-/// - `~/.claude/sessions/<pid>.json` relie un pane tmux à une session (champ `tmux`) ;
-/// - le transcript `~/.claude/projects/*/<session>.jsonl` donne l'usage du dernier message de l'assistant.
+/// How full a Claude Code session's context is, read-only:
+/// - `~/.claude/sessions/<pid>.json` links a tmux pane to a session (`tmux` field);
+/// - the transcript `~/.claude/projects/*/<session>.jsonl` gives the usage of the assistant's last message.
 enum ClaudeUsage {
     struct Info: Equatable {
         let tokens: Int
@@ -22,12 +22,12 @@ enum ClaudeUsage {
     private static var transcriptCache: [String: URL] = [:]
     private static var tailCache: [String: (mtime: Date, size: Int, info: Info?)] = [:]
 
-    /// Les identifiants de session sont des UUID : on refuse tout le reste (jamais de `/` ni de `..` dans un chemin).
+    /// Session ids are UUIDs: anything else is refused (never a `/` or `..` in a path).
     static func isValidSessionID(_ s: String) -> Bool {
         s.range(of: "^[A-Za-z0-9][A-Za-z0-9_-]{7,63}$", options: .regularExpression) != nil
     }
 
-    /// « session|%pane » → session Claude (id, statut, nom), pour les processus encore vivants.
+    /// "session|%pane" → Claude session (id, status, name), for processes that are still alive.
     static func sessionsByPane(dir: URL? = nil, alive: (Int32) -> Bool) -> [String: ClaudeSession] {
         let dir = dir ?? home.appendingPathComponent(".claude/sessions")
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }
@@ -69,7 +69,7 @@ enum ClaudeUsage {
         return nil
     }
 
-    /// Dernier message de l'assistant (hors sous-agents) : jetons d'entrée + cache = taille du contexte.
+    /// The assistant's last message (sub-agents excluded): input + cache tokens = context size.
     private static func readTail(_ url: URL, size: Int) -> Info? {
         guard let fh = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? fh.close() }
@@ -94,8 +94,8 @@ enum ClaudeUsage {
         return nil
     }
 
-    /// La taille de fenêtre n'est pas écrite dans le transcript : heuristique sur le nom du modèle,
-    /// ajustable avec `defaults write io.github.kgrandemange.tmux-island contextWindow -int 200000`.
+    /// The window size is not written in the transcript: heuristic on the model name,
+    /// adjustable with `defaults write io.github.kgrandemange.tmux-island contextWindow -int 200000`.
     static func window(for model: String) -> Int {
         if let o = UserDefaults.standard.object(forKey: "contextWindow") as? Int, o > 0 { return o }
         let m = model.lowercased()

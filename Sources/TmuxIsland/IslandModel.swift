@@ -4,24 +4,24 @@ import SwiftUI
 @MainActor
 final class IslandModel: ObservableObject {
     @Published var expanded = false
-    /// Hauteur naturelle du contenu déplié (mesurée) : sert à animer la hauteur de l'île de la notch jusqu'ici.
-    /// Valeur de départ = estimation, corrigée dès la première mesure.
+    /// Natural height of the expanded content (measured): used to animate the island's height from the notch to here.
+    /// Initial value is an estimate, corrected on the first measurement.
     @Published var contentHeight: CGFloat = 300
-    /// Captures hors écran (ImageRenderer) : la hauteur suit le contenu sans être animée.
+    /// Off-screen renders (ImageRenderer): the height follows the content without animation.
     var naturalHeight = false
     @Published var flashPane: String?
-    /// Agent qui vient de finir : l'île compacte s'élargit pour l'annoncer quelques secondes.
+    /// Agent that just finished: the compact island widens for a few seconds to announce it.
     @Published var toast: Agent?
     @Published var historyOpen = false
-    /// Pane dont l'aperçu de l'écran est déplié (survol d'une ligne).
+    /// Pane whose screen preview is expanded (row hover).
     @Published var hoveredPane: String?
-    /// Zones des lignes d'agents (coordonnées de l'île, origine en haut à gauche), publiées par la vue.
+    /// Areas of the agent rows (island coordinates, origin at top left), published by the view.
     var rowFrames: [String: CGRect] = [:]
     private var hoverWork: DispatchWorkItem?
     private var requestedRow: String?
 
-    /// Le survol vient de la position réelle du curseur (pas de `onHover`, qui émet de faux
-    /// « sorti / entré » quand la fenêtre se redimensionne sous le curseur et fait boucler l'aperçu).
+    /// Hover comes from the real cursor position (not `onHover`, which emits false
+    /// "exited / entered" events when the window resizes under the cursor and makes the preview loop).
     func setHoveredRow(_ id: String?) {
         guard id != requestedRow else { return }
         requestedRow = id
@@ -47,7 +47,7 @@ final class IslandModel: ObservableObject {
         requestedRow = nil
         hoveredPane = nil
     }
-    /// Mode concentration : plus de son, de toast ni de bannière — seuls les points d'état restent.
+    /// Focus mode: no sound, toast or banner — only the status dots remain.
     @Published var focusMode = UserDefaults.standard.bool(forKey: "focusMode")
     var onToggleFocus: (() -> Void)?
     var notchW: CGFloat = 190

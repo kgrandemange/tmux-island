@@ -29,9 +29,9 @@ final class IslandController: NSObject {
         }
     }
 
-    // MARK: - Géométrie
+    // MARK: - Geometry
 
-    /// Option « suivre l'écran actif » : l'île se pose sur l'écran où se trouve le curseur.
+    /// "Follow the active screen" option: the island settles on the screen where the cursor is.
     private(set) var followScreen = UserDefaults.standard.bool(forKey: "followActiveScreen")
     private var moveWork: DispatchWorkItem?
 
@@ -99,9 +99,9 @@ final class IslandController: NSObject {
         panel.orderFrontRegardless()
     }
 
-    /// La fenêtre garde une taille FIXE (assez grande pour l'île dépliée) : la redimensionner pendant
-    /// l'animation décrochait l'île du haut de l'écran (une bande vide laissait voir le fond).
-    /// Seule la zone visible de l'île capte la souris (voir `ignoresMouseEvents`).
+    /// The window keeps a FIXED size (big enough for the expanded island): resizing it during
+    /// the animation detached the island from the top of the screen (an empty strip showed the background).
+    /// Only the island's visible area captures the mouse (see `ignoresMouseEvents`).
     private func updateFrame(animated: Bool) {
         let h = min(820, screen.frame.height - 40)
         let target = NSRect(x: screen.frame.midX - model.expandedW / 2, y: screen.frame.maxY - h,
@@ -109,14 +109,14 @@ final class IslandController: NSObject {
         if panel.frame != target { panel.setFrame(target, display: true) }
     }
 
-    /// Rectangle réellement dessiné par l'île (coordonnées écran), centré en haut de l'écran.
+    /// Rectangle actually drawn by the island (screen coordinates), centered at the top of the screen.
     private func visibleRect() -> NSRect {
         let w = model.expanded ? model.expandedW : model.compactW
         let h = model.expanded ? max(model.contentHeight, model.notchH + 60) : model.notchH
         return NSRect(x: screen.frame.midX - w / 2, y: screen.frame.maxY - h, width: w, height: h)
     }
 
-    // MARK: - État
+    // MARK: - State
 
     private func bind() {
         store.$agents.receive(on: RunLoop.main).sink { [weak self] agents in
@@ -141,14 +141,14 @@ final class IslandController: NSObject {
         guard model.expanded != value else { return }
         if !value { model.resetHover() }
         if value { model.toast = nil }
-        // Ouverture souple avec un léger rebond ; fermeture plus rapide et calme, sans rebond.
+        // Soft opening with a slight bounce; faster, calmer closing with no bounce.
         let curve: Animation = value ? .timingCurve(0.34, 1.38, 0.5, 1, duration: 0.52)
                                      : .timingCurve(0.4, 0, 0.2, 1, duration: 0.26)
         withAnimation(curve) { model.expanded = value }
         updateFrame(animated: true)
     }
 
-    /// Debug : joue un survol dans la vraie fenêtre et enregistre le contenu image par image.
+    /// Debug: plays an open/close in the real window and records its content frame by frame.
     func debugAnimTest(dir: String) {
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         var n = 0
@@ -179,7 +179,7 @@ final class IslandController: NSObject {
     func toggleFocus() {
         model.focusMode.toggle()
         UserDefaults.standard.set(model.focusMode, forKey: "focusMode")
-        // En quittant la concentration, on annonce ce qui s'est accumulé.
+        // When leaving focus mode, announce what piled up.
         if !model.focusMode, let next = store.nextAttention() { notify(next) }
     }
 
@@ -190,7 +190,7 @@ final class IslandController: NSObject {
         }
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
         model.flashPane = agent.id
-        // L'île est sur l'écran de la notch : si l'utilisateur travaille ailleurs, on le prévient là où il regarde.
+        // The island is on the notch screen: if the user works elsewhere, alert them where they are looking.
         if let current = screenUnderMouse(), current != screen {
             if followScreen {
                 apply(screen: current)
@@ -199,7 +199,7 @@ final class IslandController: NSObject {
                 banner.show(agent, on: current)
             }
         }
-        // Toast dans l'île compacte (cliquable) ; si l'île est déjà dépliée, la ligne clignote simplement.
+        // Toast in the compact island (clickable); if the island is already expanded, the row simply flashes.
         if !model.expanded {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { model.toast = agent }
         }
@@ -234,7 +234,7 @@ final class IslandController: NSObject {
 
     private func mouseMoved() {
         let loc = NSEvent.mouseLocation
-        // Mode « suivre l'écran actif » : après un court délai sur un autre écran, l'île vient s'y poser.
+        // "Follow the active screen" mode: after a short delay on another screen, the island moves there.
         if followScreen, !model.expanded, model.toast == nil, let cur = screenUnderMouse(), cur != screen {
             if moveWork == nil {
                 let w = DispatchWorkItem { [weak self] in
@@ -254,11 +254,11 @@ final class IslandController: NSObject {
         }
         var area = visibleRect()
         if !model.expanded {
-            // Île compacte : zone de survol un peu élargie (côtés et bord haut de l'écran).
+            // Compact island: slightly enlarged hover area (sides and top edge of the screen).
             area = NSRect(x: area.minX - 6, y: area.minY, width: area.width + 12, height: area.height + 6)
         }
         let inside = area.contains(loc)
-        // Hors de l'île, la fenêtre (transparente et plus grande) laisse passer les clics.
+        // Outside the island, the (transparent, larger) window lets clicks through.
         let wantIgnore = !inside
         if panel.ignoresMouseEvents != wantIgnore { panel.ignoresMouseEvents = wantIgnore }
         if model.expanded {

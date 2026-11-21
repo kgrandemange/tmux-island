@@ -51,26 +51,26 @@ enum DebugCommands {
                 return m
             }
 
-            // Île dépliée
+            // Expanded island
             let m1 = model(expanded: true)
             write("island-expanded.png", backdrop(width: 760, height: 520) {
                 IslandView(store: store, model: m1).frame(width: m1.expandedW, height: 490, alignment: .top)
             })
 
-            // Île dépliée, aperçu du pane au survol
+            // Expanded island, pane preview on hover
             let m2 = model(expanded: true)
             m2.hoveredPane = store.agents.first { $0.state == .working }?.id
             write("island-preview.png", backdrop(width: 760, height: 640) {
                 IslandView(store: store, model: m2).frame(width: m2.expandedW, height: 610, alignment: .top)
             })
 
-            // Île compacte
+            // Compact island
             let m3 = model(expanded: false)
             write("island-compact.png", backdrop(width: 560, height: 90) {
                 IslandView(store: store, model: m3).frame(width: m3.compactW, height: m3.notchH, alignment: .top)
             })
 
-            // Toast à la fin d'une tâche
+            // Toast when a task finishes
             let m4 = model(expanded: false)
             m4.toast = store.agents.first { $0.state == .done }
             write("island-toast.png", backdrop(width: 560, height: 90) {

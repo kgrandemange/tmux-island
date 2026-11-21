@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Jauge de remplissage du contexte : grise au repos, orange > 60 %, rouge > 85 %.
+/// Context fill gauge: grey at rest, orange above 60 %, red above 85 %.
 struct ContextMeter: View {
     let info: ClaudeUsage.Info
 
@@ -25,8 +25,8 @@ struct ContextMeter: View {
     }
 }
 
-/// Accordéon : la hauteur s'anime de 0 à la hauteur naturelle du contenu, qui est rogné pendant l'animation
-/// (pas de trou vide, pas de texte qui déborde sur les sections voisines).
+/// Accordion: the height animates from 0 to the content's natural height, and the content is clipped during the animation
+/// (no empty gap, no text overflowing onto neighboring sections).
 struct Reveal<Content: View>: View {
     let open: Bool
     @ViewBuilder let content: () -> Content
@@ -51,7 +51,7 @@ private struct RevealHeightKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
-/// Logo tmux : quatre « panes » dont un actif (plus clair). Remplace l'icône de terminal générique.
+/// tmux logo: four "panes", one of them active (brighter). Replaces the generic terminal icon.
 struct PaneGlyph: View {
     var strength: Double = 1
 
@@ -99,8 +99,8 @@ struct PulsingDot: View {
     }
 }
 
-/// Point de l'aile compacte : respire quand l'agent travaille, bat plus fort quand il faut agir.
-/// Anneau creux qui respire lentement : « des shells tournent en arrière-plan », sans l'urgence d'un point plein.
+/// Dot of the compact wing: breathes while the agent works, beats harder when action is needed.
+/// Hollow ring that breathes slowly: "shells are running in the background", without the urgency of a solid dot.
 struct RingDot: View {
     let color: Color
     var size: CGFloat = 7
