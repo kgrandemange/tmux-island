@@ -22,16 +22,21 @@ enum ClaudeUsage {
     private static var transcriptCache: [String: URL] = [:]
     private static var tailCache: [String: (mtime: Date, size: Int, info: Info?)] = [:]
 
+    /// Les identifiants de session sont des UUID : on refuse tout le reste (jamais de `/` ni de `..` dans un chemin).
+    static func isValidSessionID(_ s: String) -> Bool {
+        s.range(of: "^[A-Za-z0-9][A-Za-z0-9_-]{7,63}$", options: .regularExpression) != nil
+    }
+
     /// « session|%pane » → session Claude (id, statut, nom), pour les processus encore vivants.
-    static func sessionsByPane(alive: (Int32) -> Bool) -> [String: ClaudeSession] {
-        let dir = home.appendingPathComponent(".claude/sessions")
+    static func sessionsByPane(dir: URL? = nil, alive: (Int32) -> Bool) -> [String: ClaudeSession] {
+        let dir = dir ?? home.appendingPathComponent(".claude/sessions")
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }
         var best: [String: (s: ClaudeSession, started: Double)] = [:]
         for f in files where f.pathExtension == "json" {
             guard let d = try? Data(contentsOf: f),
                   let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
-                  let tmux = j["tmux"] as? String, let sid = j["sessionId"] as? String,
-                  let pid = j["pid"] as? Int, alive(Int32(pid)),
+                  let tmux = j["tmux"] as? String, let sid = j["sessionId"] as? String, isValidSessionID(sid),
+                  let pid = j["pid"] as? Int, let pid32 = Int32(exactly: pid), alive(pid32),
                   let r = tmux.range(of: ".%", options: .backwards) else { continue }
             guard let colon = tmux.firstIndex(of: ":") else { continue }
             let pane = "\(tmux[..<colon])|%\(tmux[r.upperBound...])"
@@ -54,6 +59,7 @@ enum ClaudeUsage {
     }
 
     private static func transcript(for sid: String) -> URL? {
+        guard isValidSessionID(sid) else { return nil }
         if let u = transcriptCache[sid], FileManager.default.fileExists(atPath: u.path) { return u }
         let projects = home.appendingPathComponent(".claude/projects")
         for d in (try? FileManager.default.contentsOfDirectory(at: projects, includingPropertiesForKeys: nil)) ?? [] {

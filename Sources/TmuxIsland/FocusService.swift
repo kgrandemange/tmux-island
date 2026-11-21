@@ -69,7 +69,7 @@ enum FocusService {
         UserDefaults.standard.set(bundleID, forKey: "lastTerminalBundle")
 
         // Sélection du bon onglet quand le terminal l'expose.
-        if let tty = client?.tty {
+        if let tty = client?.tty, TerminalLauncher.isSafeTTY(tty) {
             switch bundleID {
             case "com.github.wez.wezterm": focusWezTermPane(tty: tty)
             case "com.googlecode.iterm2": runAppleScript(iTermScript(tty: tty))
@@ -99,7 +99,7 @@ enum FocusService {
           repeat with w in windows
             repeat with t in tabs of w
               repeat with s in sessions of t
-                if tty of s is "\(tty)" then
+                if tty of s is "\(TerminalLauncher.appleScriptEscape(tty))" then
                   select w
                   tell w to select t
                   select s
@@ -116,7 +116,7 @@ enum FocusService {
         tell application "Terminal"
           repeat with w in windows
             repeat with t in tabs of w
-              if tty of t is "\(tty)" then
+              if tty of t is "\(TerminalLauncher.appleScriptEscape(tty))" then
                 set selected of t to true
                 set index of w to 1
               end if

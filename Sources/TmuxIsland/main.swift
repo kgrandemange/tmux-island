@@ -120,7 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleFocus() { controller.toggleFocus() }
     @objc private func next() { controller.jumpToNextAttention() }
     @objc private func openState() {
-        try? FileManager.default.createDirectory(at: HookStore.dir, withIntermediateDirectories: true)
+        HookStore.ensureDir()
         NSWorkspace.shared.open(HookStore.dir)
     }
 }

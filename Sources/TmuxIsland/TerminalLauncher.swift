@@ -40,6 +40,11 @@ enum TerminalLauncher {
         }
     }
 
+    /// Un tty macOS ressemble à `/dev/ttys003` : on refuse tout le reste avant de l'insérer dans un script.
+    static func isSafeTTY(_ tty: String) -> Bool {
+        tty.range(of: "^/dev/tty[A-Za-z0-9]{1,16}$", options: .regularExpression) != nil
+    }
+
     static func shellQuote(_ s: String) -> String {
         s.range(of: "^[A-Za-z0-9_/.:=@%+-]+$", options: .regularExpression) != nil
             ? s : "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"

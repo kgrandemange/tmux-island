@@ -6,9 +6,14 @@ import Foundation
 enum DemoMode {
     static let server: String? = {
         let a = CommandLine.arguments
-        guard let i = a.firstIndex(of: "--demo-server"), i + 1 < a.count else { return nil }
+        guard let i = a.firstIndex(of: "--demo-server"), i + 1 < a.count, isValidName(a[i + 1]) else { return nil }
         return a[i + 1]
     }()
+
+    /// Un nom de socket tmux : lettres, chiffres, `.`, `_`, `-` (pas de `/` ni de `..`).
+    static func isValidName(_ s: String) -> Bool {
+        s.range(of: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$", options: .regularExpression) != nil && !s.contains("..")
+    }
     static var active: Bool { server != nil }
     static var socketPath: String? { server.map { "/private/tmp/tmux-\(getuid())/\($0)" } }
 }

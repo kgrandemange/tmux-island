@@ -104,7 +104,7 @@ enum TmuxService {
             for name in (try? FileManager.default.contentsOfDirectory(atPath: root)) ?? [] where name != "default" {
                 let path = root + "/" + name
                 var st = stat()
-                guard stat(path, &st) == 0, (st.st_mode & S_IFMT) == S_IFSOCK,
+                guard stat(path, &st) == 0, (st.st_mode & S_IFMT) == S_IFSOCK, st.st_uid == uid,
                       seen.insert((path as NSString).resolvingSymlinksInPath).inserted else { continue }
                 servers.append(path)
             }
@@ -164,6 +164,13 @@ enum HookStore {
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/state")
         return base.appendingPathComponent("tmux-island")
     }()
+
+    /// Crée le dossier d'état en mode privé (0700) : les messages des agents n'ont pas à être lisibles par les autres comptes.
+    static func ensureDir() {
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
+                                                 attributes: [.posixPermissions: 0o700])
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+    }
 
     static func readAll(validPanes: Set<String>) -> [String: HookEvent] {
         guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [:] }

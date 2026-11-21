@@ -53,6 +53,7 @@ final class AgentStore: ObservableObject {
     func start() {
         poll()
         scheduleTimer(Self.envInterval ?? 1.0)
+        HookStore.ensureDir()
         let claudeSessions = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/sessions").path
         watcher = FileWatcher(paths: [claudeSessions, HookStore.dir.path]) { [weak self] in
             Task { @MainActor in self?.poll() }

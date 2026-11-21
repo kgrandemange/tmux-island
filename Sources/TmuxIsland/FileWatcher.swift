@@ -9,7 +9,9 @@ final class FileWatcher {
 
     init(paths: [String], latency: TimeInterval = 0.1, onChange: @escaping () -> Void) {
         self.onChange = onChange
-        for p in paths { try? FileManager.default.createDirectory(atPath: p, withIntermediateDirectories: true) }
+        // Les dossiers observés sont créés par leur propriétaire (HookStore.ensureDir) ; on ignore ceux qui n'existent pas.
+        let paths = paths.filter { FileManager.default.fileExists(atPath: $0) }
+        guard !paths.isEmpty else { return }
         var ctx = FSEventStreamContext(version: 0, info: Unmanaged.passUnretained(self).toOpaque(),
                                        retain: nil, release: nil, copyDescription: nil)
         let callback: FSEventStreamCallback = { _, info, _, _, _, _ in
