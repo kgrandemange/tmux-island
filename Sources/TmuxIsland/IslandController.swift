@@ -299,7 +299,16 @@ final class IslandController: NSObject {
         if ch == "f" { toggleFocus(); return true }
         if ch == "j" { jumpToNextAttention(); return true }
         let visible = store.visibleAgents
-        if let n = Int(ch), n >= 1, n <= visible.count { jump(to: visible[n - 1]); return true }
+        if let n = Self.agentNumber(forKeyCode: e.keyCode), n <= visible.count { jump(to: visible[n - 1]); return true }
         return false
+    }
+
+    /// Physical keys of the number row and the keypad → 1...9. Based on key codes, not characters, so it works on
+    /// layouts where digits need Shift (e.g. French AZERTY, where the unshifted key gives `&`, `é`, `"`…).
+    nonisolated static func agentNumber(forKeyCode code: UInt16) -> Int? {
+        let row: [UInt16] = [18, 19, 20, 21, 23, 22, 26, 28, 25]
+        let pad: [UInt16] = [83, 84, 85, 86, 87, 88, 89, 91, 92]
+        if let i = row.firstIndex(of: code) ?? pad.firstIndex(of: code) { return i + 1 }
+        return nil
     }
 }
