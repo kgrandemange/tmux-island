@@ -27,7 +27,7 @@
   <img src="docs/assets/island-expanded.png" width="720" alt="The expanded island: an agent waiting with approval buttons, a finished agent, a running agent, and the tmux sessions">
 </p>
 
-> Screenshot data is fictional (projects "shop-web", "shop-api", "shop-infra"). The app's interface is currently in French.
+> Screenshot data is fictional (projects "shop-web", "shop-api", "shop-infra"). The interface is available in English and French and follows your system language.
 
 ## Why
 

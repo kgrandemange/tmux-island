@@ -23,6 +23,7 @@
       if (n.dataset.enAlt !== undefined) n.setAttribute("alt", lang === "en" ? n.dataset.enAlt : n.dataset.frAlt);
       if (n.dataset.enLabel !== undefined) n.setAttribute("aria-label", lang === "en" ? n.dataset.enLabel : n.dataset.frLabel);
     });
+    document.querySelectorAll("img[data-src-fr]").forEach((i) => { i.src = lang === "fr" ? i.dataset.srcFr : i.dataset.srcEn; });
     setVideoLang(lang);
     document.title = meta[lang].title;
     document.querySelector('meta[name="description"]')?.setAttribute("content", meta[lang].desc);

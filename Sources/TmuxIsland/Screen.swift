@@ -44,10 +44,10 @@ enum Screen {
     static func backgroundSummary(_ lines: [String]) -> String? {
         let recent = lines.suffix(10)
         for line in recent.reversed() {
-            if let n = number(in: line, before: "background tasks?") { return n == 1 ? "1 tâche de fond" : "\(n) tâches de fond" }
+            if let n = number(in: line, before: "background tasks?") { return L10n.plural("background.task", n) }
         }
         for line in recent.reversed() {
-            if let n = number(in: line, before: "shells? still running") { return n == 1 ? "1 shell" : "\(n) shells" }
+            if let n = number(in: line, before: "shells? still running") { return L10n.plural("background.shell", n) }
         }
         return nil
     }

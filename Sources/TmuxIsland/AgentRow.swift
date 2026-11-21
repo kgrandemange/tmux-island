@@ -34,10 +34,10 @@ struct AgentRow: View {
                     }
                 }
                 if agent.state == .waiting && agent.options.isEmpty {
-                    ActionButton(title: "↵ Valider") { FocusService.sendEnter(to: agent.pane) }
+                    ActionButton(title: L10n.tr("row.confirm")) { FocusService.sendEnter(to: agent.pane) }
                 }
                 if agent.state.needsAttention {
-                    ActionButton(title: "Répondre") {
+                    ActionButton(title: L10n.tr("row.reply")) {
                         replying.toggle()
                         if replying { model.requestKey?(); focused = true }
                     }
@@ -70,7 +70,7 @@ struct AgentRow: View {
                 }
             }
             if replying {
-                TextField("Réponse rapide (↵ pour envoyer)", text: $reply)
+                TextField(L10n.tr("row.replyPlaceholder"), text: $reply)
                     .textFieldStyle(.plain).font(.system(size: 12))
                     .padding(.horizontal, 10).padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.1)))

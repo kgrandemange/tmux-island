@@ -20,7 +20,7 @@ struct ContextMeter: View {
             }
             Text(label).font(.system(size: 9, design: .monospaced)).foregroundStyle(color)
         }
-        .help("Contexte : \(label) / \(info.window / 1000)k (\(Int(info.fraction * 100)) %)")
+        .help(L10n.tr("context.help", label, info.window / 1000, Int(info.fraction * 100)))
         .padding(.trailing, 6)
     }
 }

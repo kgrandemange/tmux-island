@@ -42,25 +42,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "TmuxIsland")
         let menu = NSMenu()
-        toggleItem = menu.addItem(withTitle: "Ouvrir l'île", action: #selector(toggle), keyEquivalent: "")
+        toggleItem = menu.addItem(withTitle: L10n.tr("menu.open"), action: #selector(toggle), keyEquivalent: "")
         toggleItem.target = self
-        nextItem = menu.addItem(withTitle: "Prochain agent à traiter", action: #selector(next), keyEquivalent: "")
+        nextItem = menu.addItem(withTitle: L10n.tr("menu.next"), action: #selector(next), keyEquivalent: "")
         nextItem.target = self
-        focusItem = menu.addItem(withTitle: "Mode concentration", action: #selector(toggleFocus), keyEquivalent: "")
+        focusItem = menu.addItem(withTitle: L10n.tr("menu.focus"), action: #selector(toggleFocus), keyEquivalent: "")
         focusItem.target = self
         focusItem.state = controller.model.focusMode ? .on : .off
         focusSub = controller.model.$focusMode.sink { [weak self] on in self?.focusItem.state = on ? .on : .off }
         menu.addItem(.separator())
-        followItem = menu.addItem(withTitle: "Suivre l'écran actif", action: #selector(toggleFollowScreen), keyEquivalent: "")
+        followItem = menu.addItem(withTitle: L10n.tr("menu.follow"), action: #selector(toggleFollowScreen), keyEquivalent: "")
         followItem.target = self
-        loginItem = menu.addItem(withTitle: "Lancer à la connexion", action: #selector(toggleLogin), keyEquivalent: "")
+        loginItem = menu.addItem(withTitle: L10n.tr("menu.login"), action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
         menu.delegate = self
-        let prefs = menu.addItem(withTitle: "Réglages…", action: #selector(openSettings), keyEquivalent: ",")
+        let prefs = menu.addItem(withTitle: L10n.tr("menu.settings"), action: #selector(openSettings), keyEquivalent: ",")
         prefs.target = self
-        menu.addItem(withTitle: "Ouvrir le dossier des états", action: #selector(openState), keyEquivalent: "").target = self
+        menu.addItem(withTitle: L10n.tr("menu.stateFolder"), action: #selector(openState), keyEquivalent: "").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quitter", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
     }
 
@@ -87,8 +87,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
             let alert = NSAlert()
-            alert.messageText = "Impossible de modifier le lancement à la connexion"
-            alert.informativeText = "\(error.localizedDescription)\n\nInstalle d'abord l'app avec scripts/install.sh (elle doit se trouver dans ~/Applications)."
+            alert.messageText = L10n.tr("alert.loginTitle")
+            alert.informativeText = L10n.tr("alert.loginBody", error.localizedDescription)
             alert.runModal()
             settings.model.launchAtLogin = SMAppService.mainApp.status == .enabled
         }
@@ -96,9 +96,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         let sc = ShortcutStore.shared
-        toggleItem.title = "Ouvrir l'île  (\(sc.shortcut(.toggle).label))"
-        nextItem.title = "Prochain agent à traiter  (\(sc.shortcut(.next).label))"
-        focusItem.title = "Mode concentration  (\(sc.shortcut(.focus).label))"
+        toggleItem.title = "\(L10n.tr("menu.open"))  (\(sc.shortcut(.toggle).label))"
+        nextItem.title = "\(L10n.tr("menu.next"))  (\(sc.shortcut(.next).label))"
+        focusItem.title = "\(L10n.tr("menu.focus"))  (\(sc.shortcut(.focus).label))"
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
         followItem.state = controller.followScreen ? .on : .off
     }
@@ -111,8 +111,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             else { try SMAppService.mainApp.register() }
         } catch {
             let alert = NSAlert()
-            alert.messageText = "Impossible de modifier le lancement à la connexion"
-            alert.informativeText = "\(error.localizedDescription)\n\nInstalle d'abord l'app avec scripts/install.sh (elle doit se trouver dans ~/Applications)."
+            alert.messageText = L10n.tr("alert.loginTitle")
+            alert.informativeText = L10n.tr("alert.loginBody", error.localizedDescription)
             alert.runModal()
         }
     }

@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-21
+
+### Added
+- **English interface**: every text now exists in English and French and follows the system language (English is the
+  fallback). Adding a language only needs a new `Localization/<code>.lproj` folder (see CONTRIBUTING.md).
+- Keyboard first: agents are selected with `1`-`9` by physical key, so layouts that need Shift for digits (French
+  AZERTY) work without it, keypad included.
+- Demo GIFs, a "Keyboard first" section and the blue "in the background" state in the README and the website.
+
+### Changed
+- The macOS permission prompt for controlling iTerm2 / Terminal is localized too.
+- Website and README screenshots are shown in the visitor's language.
+
 ## [1.0.0] - 2026-11-21
 
 First stable release, and the source code is now open under the MIT license.

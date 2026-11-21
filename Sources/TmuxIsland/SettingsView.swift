@@ -24,16 +24,16 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Raccourcis globaux") {
+            Section(L10n.tr("settings.shortcuts")) {
                 ForEach(ShortcutAction.allCases, id: \.self) { action in
                     ShortcutRow(action: action, store: shortcuts)
                 }
-                Button("Rétablir les raccourcis par défaut") { shortcuts.resetAll() }
+                Button(L10n.tr("settings.reset")) { shortcuts.resetAll() }
             }
-            Section("Comportement") {
-                Toggle("Suivre l'écran actif", isOn: $model.followScreen)
-                Toggle("Sons à la fin d'une tâche", isOn: $model.sounds)
-                Toggle("Lancer à la connexion", isOn: $model.launchAtLogin)
+            Section(L10n.tr("settings.behavior")) {
+                Toggle(L10n.tr("settings.follow"), isOn: $model.followScreen)
+                Toggle(L10n.tr("settings.sounds"), isOn: $model.sounds)
+                Toggle(L10n.tr("settings.login"), isOn: $model.launchAtLogin)
             }
         }
         .formStyle(.grouped)
@@ -55,7 +55,7 @@ private struct ShortcutRow: View {
                 if let error { Text(error).font(.caption).foregroundStyle(.red) }
             }
             Spacer()
-            Button(recording ? "Appuie sur la combinaison…" : store.shortcut(action).label) { toggleRecording() }
+            Button(recording ? L10n.tr("settings.recording") : store.shortcut(action).label) { toggleRecording() }
                 .buttonStyle(.bordered)
                 .frame(minWidth: 170)
         }
@@ -95,7 +95,7 @@ final class SettingsWindowController {
         if window == nil {
             let host = NSHostingController(rootView: SettingsView(shortcuts: .shared, model: model))
             let w = NSWindow(contentViewController: host)
-            w.title = "Réglages — TmuxIsland"
+            w.title = L10n.tr("settings.title")
             w.styleMask = [.titled, .closable]
             w.isReleasedWhenClosed = false
             host.view.layoutSubtreeIfNeeded()

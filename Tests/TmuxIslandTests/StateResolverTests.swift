@@ -213,6 +213,8 @@ final class TerminalLauncherTests: XCTestCase {
 }
 
 final class ShortcutTests: XCTestCase {
+    override class func setUp() { L10n.resourceRoot = TestResources.localization }
+
     func testLabelOrdersModifiersLikeMacOS() {
         let s = Shortcut(keyCode: 49, modifiers: UInt32(Carbon.controlKey | Carbon.optionKey))
         XCTAssertEqual(s.label, "⌃⌥Space")
@@ -339,6 +341,8 @@ final class ChooseOptionIntegrationTests: XCTestCase {
 }
 
 final class BackgroundStateTests: XCTestCase {
+    override class func setUp() { L10n.resourceRoot = TestResources.localization }
+
     private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 
     private func resolve(_ old: Track = Track(state: .idle, since: Date(timeIntervalSince1970: 0)),
@@ -381,12 +385,15 @@ final class BackgroundStateTests: XCTestCase {
     }
 
     func testBackgroundSummaryFromFooter() {
-        XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ bypass permissions on · 3 background tasks · ← 1 agent · ↓ to manage"]), "3 tâches de fond")
+        L10n.override = "en"; defer { L10n.override = nil }
+        XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ bypass permissions on · 3 background tasks · ← 1 agent · ↓ to manage"]), "3 background tasks")
+        XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ 1 background task · ↓ to manage"]), "1 background task")
+        L10n.override = "fr"
         XCTAssertEqual(Screen.backgroundSummary(["⏵⏵ 1 background task · ↓ to manage"]), "1 tâche de fond")
     }
 
     func testBackgroundSummaryFromTurnEndLine() {
         XCTAssertEqual(Screen.backgroundSummary(["✻ Churned for 10m 53s · done 9:09 PM · 2 shells still running"]), "2 shells")
-        XCTAssertNil(Screen.backgroundSummary(["rien de spécial", "❯ "]))
+        XCTAssertNil(Screen.backgroundSummary(["nothing special", "❯ "]))
     }
 }
