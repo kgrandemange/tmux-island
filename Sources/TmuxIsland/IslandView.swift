@@ -116,11 +116,12 @@ struct IslandView: View {
                 if store.agents.isEmpty {
                     Circle().stroke(Color.white.opacity(0.25), lineWidth: 1).frame(width: 7, height: 7)
                 } else {
-                    let maxDots = store.agents.count > 6 ? 5 : 6
-                    ForEach(store.agents.prefix(maxDots)) { AgentDot(state: $0.state) }
-                    if store.agents.count > 6 {
-                        Text("+\(store.agents.count - 5)").font(.system(size: 9, weight: .semibold, design: .rounded))
+                    let shape = CompactDots.layout(agentCount: store.agents.count)
+                    ForEach(store.agents.prefix(shape.dots)) { AgentDot(state: $0.state) }
+                    if let more = shape.overflow {
+                        Text("+\(more)").font(.system(size: 9, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.5))
+                            .lineLimit(1).minimumScaleFactor(0.7).fixedSize()
                     }
                 }
             }
@@ -138,6 +139,7 @@ struct IslandView: View {
         VStack(spacing: 0) {
             header
             VStack(alignment: .leading, spacing: 14) {
+                if CompactDots.needsOverview(agentCount: store.agents.count) { overviewSection }
                 agentsSection
                 if !store.history.isEmpty { historySection }
                 if !store.sessions.isEmpty { sessionsSection }
@@ -185,6 +187,25 @@ struct IslandView: View {
         }
     }
 
+    /// Every agent as a dot (the rows below scroll past six, and the compact island shows only a few): the state of the
+    /// whole fleet at a glance. Hover for the name, click to jump.
+    private var overviewSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.tr("section.overview", store.agents.count)).font(.system(size: 9, weight: .semibold)).tracking(1)
+                .foregroundStyle(.tertiary)
+            WrapLayout(spacing: 6) {
+                ForEach(store.agents) { agent in
+                    AgentDot(state: agent.state)
+                        .frame(width: 16, height: 16)
+                        .contentShape(Rectangle())
+                        .onTapGesture { model.onJump?(agent) }
+                        .help("\(agent.displayName) · \(agent.pane.project) · \(agent.state.label)")
+                        .accessibilityLabel("\(agent.displayName) \(agent.pane.project) \(agent.state.label)")
+                }
+            }
+        }
+    }
+
     private var agentsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             if store.visibleAgents.isEmpty {
@@ -196,8 +217,9 @@ struct IslandView: View {
                 let rows = ForEach(Array(store.visibleAgents.enumerated()), id: \.element.id) { i, agent in
                     AgentRow(agent: agent, index: i + 1, flash: model.flashPane == agent.id, model: model)
                 }
-                if store.visibleAgents.count > 6 {
-                    ScrollView(showsIndicators: false) { VStack(spacing: 6) { rows } }.frame(height: 6 * 60)
+                if store.visibleAgents.count > IslandLayout.visibleAgentRows {
+                    ScrollView(showsIndicators: false) { VStack(spacing: 6) { rows } }
+                        .frame(height: CGFloat(IslandLayout.visibleAgentRows) * IslandLayout.agentRowHeight)
                 } else {
                     VStack(spacing: 6) { rows }
                 }
@@ -230,12 +252,22 @@ struct IslandView: View {
     private var sessionsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.tr("section.sessions")).font(.system(size: 9, weight: .semibold)).tracking(1).foregroundStyle(.tertiary)
-            ForEach(store.sessions) { s in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(s.displayName).font(.system(size: 11, weight: .semibold)).foregroundStyle(s.attached ? .primary : .secondary)
-                        .frame(width: 92, alignment: .leading).lineLimit(1)
-                    FlowChips(session: s, store: store, model: model)
-                }
+            // The window has a fixed height: past a few sessions the list scrolls instead of pushing the footer out of it.
+            if store.sessions.count > IslandLayout.visibleSessions {
+                ScrollView(showsIndicators: false) { VStack(alignment: .leading, spacing: 8) { sessionRows } }
+                    .frame(height: IslandLayout.sessionsListHeight)
+            } else {
+                sessionRows
+            }
+        }
+    }
+
+    private var sessionRows: some View {
+        ForEach(store.sessions) { s in
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(s.displayName).font(.system(size: 11, weight: .semibold)).foregroundStyle(s.attached ? .primary : .secondary)
+                    .frame(width: 92, alignment: .leading).lineLimit(1)
+                FlowChips(session: s, store: store, model: model)
             }
         }
     }

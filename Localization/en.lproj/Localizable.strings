@@ -30,6 +30,7 @@
 "empty.idle.one" = "Nothing to handle — %d idle agent.";
 "empty.idle.other" = "Nothing to handle — %d idle agents.";
 "section.recent" = "RECENT";
+"section.overview" = "ALL AGENTS · %d";
 "section.sessions" = "SESSIONS";
 "hint.goto" = "go to agent";
 "hint.next" = "next to handle";

@@ -30,6 +30,7 @@
 "empty.idle.one" = "Rien à traiter — %d agent inactif.";
 "empty.idle.other" = "Rien à traiter — %d agents inactifs.";
 "section.recent" = "RÉCENTS";
+"section.overview" = "TOUS LES AGENTS · %d";
 "section.sessions" = "SESSIONS";
 "hint.goto" = "aller à l'agent";
 "hint.next" = "prochain à traiter";
