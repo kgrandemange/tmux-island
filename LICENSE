@@ -1,32 +1,21 @@
-TmuxIsland Freeware License
+MIT License
 
-Copyright (c) 2026 kgrandemange. All rights reserved.
+Copyright (c) 2026 Kevin Grandemange
 
-TmuxIsland (the "Software") is free to use but it is NOT open source.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-1. Grant. You may download and use the Software free of charge, for personal or
-   professional purposes, on any number of devices that you own or control.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-2. Restrictions. Without prior written permission from the copyright holder, you
-   may not: (a) modify, adapt, translate or create derivative works of the
-   Software; (b) redistribute, sublicense, sell, rent, lease or publish the
-   Software, in binary or source form; (c) reverse engineer, decompile or
-   disassemble the Software, except to the extent that applicable law expressly
-   permits it despite this restriction; (d) remove or alter any copyright notice.
-
-3. Source code. If you have been given access to the source code, it is provided
-   only so that you can review it and build the Software for your own use. That
-   access does not grant any other right and does not make the Software open
-   source.
-
-4. Privacy. The Software runs locally. It contains no networking code and does
-   not collect, store remotely or transmit any data.
-
-5. No warranty. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
-   EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
-
-6. Termination. This license terminates automatically if you breach any of its
-   terms, in which case you must stop using the Software and delete your copies.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

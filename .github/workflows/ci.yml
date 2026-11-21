@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Apple Silicon runner: the app targets arm64 only.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: swift --version
+      - name: tmux (used by the integration tests)
+        run: command -v tmux || brew install tmux
+      - name: Build
+        run: swift build -c release
+      - name: Test
+        run: swift test
+      - name: Package (dry run)
+        run: ./scripts/package.sh

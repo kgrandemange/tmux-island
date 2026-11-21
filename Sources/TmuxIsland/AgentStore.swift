@@ -2,17 +2,6 @@ import AppKit
 import Combine
 import Foundation
 
-private struct Snapshot {
-    var panes: [Pane] = []
-    var kinds: [String: String] = [:]
-    var hooks: [String: HookEvent] = [:]
-    var tails: [String: [String]] = [:]
-    var clients: [TmuxClient] = []
-    var terminalPIDs: Set<Int32> = []
-    var usage: [String: ClaudeUsage.Info] = [:]
-    var claude: [String: ClaudeSession] = [:]
-}
-
 @MainActor
 final class AgentStore: ObservableObject {
     @Published private(set) var agents: [Agent] = []
@@ -25,7 +14,7 @@ final class AgentStore: ObservableObject {
         return h
     }()
 
-    /// Émis quand un agent passe en « terminé » ou « attend une réponse ».
+    /// Emitted when an agent becomes "done" or "waiting" for an answer.
     let alerts = PassthroughSubject<Agent, Never>()
 
     private var tracks: [String: Track] = [:]
@@ -36,12 +25,12 @@ final class AgentStore: ObservableObject {
     private var interval: TimeInterval = 1.0
     private var watcher: FileWatcher?
 
-    /// Cadence de relevé de secours : 1 s tant qu'un agent n'a pas de statut officiel (heuristique d'écran),
-    /// sinon 3 s. Les changements de fichiers déclenchent un relevé immédiat. Surchargeable pour les tests.
+    /// Fallback polling interval: 1 s while an agent has no official status (screen heuristics),
+    /// otherwise 3 s. File changes trigger an immediate refresh. Overridable for tests.
     private static let debug = ProcessInfo.processInfo.environment["TMUXISLAND_DEBUG"] != nil
     private static let envInterval = ProcessInfo.processInfo.environment["TMUXISLAND_POLL_INTERVAL"].flatMap(Double.init)
 
-    /// Agents affichés en lignes dans l'île : tout sauf les inactifs (ceux-ci restent accessibles via les sessions).
+    /// Agents shown as rows in the island: everything except idle ones (those stay reachable through the sessions).
     var visibleAgents: [Agent] { agents.filter { $0.state != .idle } }
     var idleCount: Int { agents.count - visibleAgents.count }
     var attentionAgents: [Agent] { agents.filter { $0.state.needsAttention } }
@@ -53,6 +42,7 @@ final class AgentStore: ObservableObject {
     func start() {
         poll()
         scheduleTimer(Self.envInterval ?? 1.0)
+        HookStore.ensureDir()
         let claudeSessions = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/sessions").path
         watcher = FileWatcher(paths: [claudeSessions, HookStore.dir.path]) { [weak self] in
             Task { @MainActor in self?.poll() }
@@ -67,7 +57,7 @@ final class AgentStore: ObservableObject {
         }
     }
 
-    /// Prochain agent à traiter : en attente d'abord, puis terminés, du plus ancien au plus récent.
+    /// Next agent to handle: waiting ones first, then finished ones, oldest first.
     func nextAttention() -> Agent? {
         attentionAgents.sorted { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }.first
     }
@@ -86,43 +76,15 @@ final class AgentStore: ObservableObject {
     private var lastHooks: [String: HookEvent] = [:]
 
     private func poll() {
-        // Un relevé est déjà en cours : on en refera un juste après (sans en empiler plusieurs).
+        // A refresh is already running: do one more right after it (without stacking several).
         guard !busy else { pendingPoll = true; return }
         busy = true
         Task { @MainActor [weak self] in
-            let snap = await Task.detached(priority: .utility) { Self.collect() }.value
+            let snap = await Task.detached(priority: .utility) { SnapshotCollector.collect() }.value
             self?.apply(snap)
             self?.busy = false
             if self?.pendingPoll == true { self?.pendingPoll = false; self?.poll() }
         }
-    }
-
-    private nonisolated static func collect() -> Snapshot {
-        var snap = Snapshot()
-        for server in TmuxService.discoverServers() {
-            snap.panes += TmuxService.listPanes(server: server)
-            snap.clients += TmuxService.listClients(server: server)
-        }
-        guard !snap.panes.isEmpty else { return snap }
-        let ps = ProcessTable()
-        snap.hooks = HookStore.readAll(validPanes: Set(snap.panes.map(\.id)))
-        snap.claude = DemoMode.active ? [:] : ClaudeUsage.sessionsByPane(alive: { ps.cmd[$0] != nil })
-        for pane in snap.panes {
-            if let k = ps.agentKind(under: pane.pid) { snap.kinds[pane.id] = k }
-            else if snap.claude[pane.claudeKey] != nil { snap.kinds[pane.id] = "claude" }
-        }
-        for pane in snap.panes where snap.kinds[pane.id] != nil || snap.hooks[pane.id] != nil {
-            snap.tails[pane.id] = TmuxService.capture(pane)
-        }
-        for pane in snap.panes where snap.kinds[pane.id] == "claude" {
-            if let c = snap.claude[pane.claudeKey], let info = ClaudeUsage.info(sessionId: c.sessionId) { snap.usage[pane.id] = info }
-        }
-        for c in snap.clients {
-            for a in [c.pid] + ps.ancestors(of: c.pid) {
-                if NSRunningApplication(processIdentifier: a)?.activationPolicy == .regular { snap.terminalPIDs.insert(a) }
-            }
-        }
-        return snap
     }
 
     private func apply(_ snap: Snapshot) {
@@ -164,13 +126,13 @@ final class AgentStore: ObservableObject {
             }
         }
         tracks = tracks.filter { id, _ in result.contains(where: { $0.id == id }) }
-        // Sans agent « heuristique », les fichiers de statut suffisent : on relâche le polling de secours.
+        // With no "heuristic" agent, the status files are enough: relax the fallback polling.
         let wanted = Self.envInterval ?? (result.contains { snap.claude[$0.id]?.status == nil } ? 1.0 : 3.0)
         if wanted != interval { scheduleTimer(wanted) }
         result.sort { ($0.state.priority, $0.since) < ($1.state.priority, $1.since) }
         if result != agents { agents = result }
 
-        // Sessions / fenêtres
+        // Sessions and windows
         var sess: [String: TmuxSession] = [:]
         for pane in snap.panes {
             let key = "\(pane.server ?? "")|\(pane.session)"
@@ -187,7 +149,7 @@ final class AgentStore: ObservableObject {
         firstPoll = false
     }
 
-    /// Charge des données fictives (documentation, captures d'écran) sans interroger tmux.
+    /// Loads fictional data (documentation, screenshots) without querying tmux.
     func loadDemo() {
         let d = DemoData.make()
         agents = d.agents
@@ -206,7 +168,7 @@ final class AgentStore: ObservableObject {
         if !DemoMode.active, let d = try? JSONEncoder().encode(history) { UserDefaults.standard.set(d, forKey: "history") }
     }
 
-    /// Pane actuel correspondant à une entrée (même pane, sinon la fenêtre) ; nil si la session n'existe plus.
+    /// Current pane matching an entry (same pane, else its window); nil if the session no longer exists.
     func target(for e: HistoryEntry) -> Pane? {
         let all = sessions.flatMap(\.windows).flatMap(\.panes)
         if let p = all.first(where: { $0.id == e.paneID && $0.session == e.session }) { return p }

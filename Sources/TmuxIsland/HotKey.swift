@@ -1,7 +1,7 @@
 import Carbon
 import Foundation
 
-/// Raccourcis globaux (Carbon : aucune permission d'accessibilité requise).
+/// Global shortcuts (Carbon: no accessibility permission required).
 final class HotKeyCenter {
     static let shared = HotKeyCenter()
     private var handlers: [UInt32: () -> Void] = [:]
@@ -30,7 +30,7 @@ final class HotKeyCenter {
         if let ref { refs.append(ref) }
     }
 
-    /// Libère tous les raccourcis (avant de les réenregistrer après un changement de réglage).
+    /// Releases all shortcuts (before re-registering them after a settings change).
     func unregisterAll() {
         for r in refs { UnregisterEventHotKey(r) }
         refs.removeAll()

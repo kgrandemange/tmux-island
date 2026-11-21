@@ -1,6 +1,6 @@
 import Foundation
 
-/// Écran d'un agent : heuristiques sur le contenu du pane (en complément des hooks).
+/// An agent's screen: heuristics on the pane's content (complementing the hooks).
 enum Screen {
     static func isWorking(_ lines: [String]) -> Bool {
         lines.suffix(12).contains { $0.localizedCaseInsensitiveContains("esc to interrupt") || $0.localizedCaseInsensitiveContains("ctrl+c to interrupt") }
@@ -13,8 +13,8 @@ enum Screen {
         }
     }
 
-    /// Menu de validation actuellement affiché en bas de l'écran : lignes « 1. Yes », « 2. … », « 3. No… ».
-    /// Ignore les listes numérotées de la conversation (le menu doit se terminer dans les dernières lignes).
+    /// Permission menu currently displayed at the bottom of the screen: lines "1. Yes", "2. …", "3. No…".
+    /// Ignores numbered lists of the conversation (the menu must end within the last lines).
     static func pendingOptions(_ lines: [String]) -> [PermissionOption] {
         let box = CharacterSet(charactersIn: " │┃╎")
         let pattern = try! NSRegularExpression(pattern: #"^([❯>›])?\s*(\d{1,2})[.)]\s+(\S.*)$"#)
@@ -39,8 +39,8 @@ enum Screen {
         return best.options
     }
 
-    /// Shells / sous-agents encore actifs en arrière-plan, lus dans le pied de page de Claude Code
-    /// (« 3 background tasks ») ou la ligne de fin de tour (« 2 shells still running »).
+    /// Shells / sub-agents still active in the background, read from Claude Code's footer
+    /// ("3 background tasks") or the end-of-turn line ("2 shells still running").
     static func backgroundSummary(_ lines: [String]) -> String? {
         let recent = lines.suffix(10)
         for line in recent.reversed() {
@@ -59,12 +59,12 @@ enum Screen {
         return Int(text[r])
     }
 
-    /// Claude affiche « Interrupted » après un Esc : ce n'est pas une fin de tâche à signaler.
+    /// Claude prints "Interrupted" after an Esc: that is not a finished task worth reporting.
     static func isInterrupted(_ lines: [String]) -> Bool {
         lines.suffix(12).contains { $0.contains("Interrupted") }
     }
 
-    /// Dernières lignes brutes du pane (sans les filets décoratifs), pour l'aperçu au survol.
+    /// Last raw lines of the pane (without decorative rules), for the hover preview.
     static func preview(_ lines: [String]) -> [String] {
         let noise = CharacterSet(charactersIn: "─━│┃╭╮╰╯┌┐└┘ ╌")
         return lines.filter { l in !l.unicodeScalars.allSatisfy { noise.contains($0) } }

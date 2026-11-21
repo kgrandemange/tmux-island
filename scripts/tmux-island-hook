@@ -1,28 +1,39 @@
 #!/usr/bin/env bash
-# Hook appelé par les agents IA pour signaler leur état à TmuxIsland.
-#   tmux-island-hook <working|waiting|done|end> [agent]     (Claude Code : JSON sur stdin)
-#   tmux-island-hook codex '<json>'                          (Codex `notify` : JSON en argument)
-# N'a aucun effet hors d'un pane tmux.
+# Hook called by AI agents to tell TmuxIsland their state.
+#   tmux-island-hook <working|waiting|done|end> [agent]     (Claude Code: JSON on stdin)
+#   tmux-island-hook codex '<json>'                          (Codex `notify`: JSON as an argument)
+# Does nothing outside a tmux pane. Inputs are validated: nothing is ever written outside the state directory.
 [ -z "$TMUX_PANE" ] && exit 0
 
 state="$1"; agent="${2:-claude}"; msg=""
-dir="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-island"
-pane="${TMUX_PANE#%}"
-# Plusieurs serveurs tmux (`tmux -L nom`) : les numéros de pane peuvent se recouper, on préfixe par le socket.
-sock="default"; [ -n "$TMUX" ] && sock="$(basename "${TMUX%%,*}")"
-[ "$sock" != "default" ] && pane="${sock}__${pane}"
-mkdir -p "$dir"
 
-# Codex appelle `notify` avec le JSON en dernier argument : fin de tour = done.
+# Codex calls `notify` with the JSON as the last argument: end of turn = done.
 if [ "$state" = "codex" ]; then state="done"; agent="codex"; fi
+
+case "$state" in working|waiting|done|end) ;; *) exit 0 ;; esac
+# Free-form text must not be able to break the JSON written below.
+case "$agent" in *[!A-Za-z0-9._-]*|"") agent="claude" ;; esac
+agent="${agent:0:32}"
+
+# The pane id comes from the environment: only digits are accepted (e.g. "%12" -> "12").
+pane="${TMUX_PANE#%}"
+case "$pane" in *[!0-9]*|"") exit 0 ;; esac
+
+# Several tmux servers (`tmux -L name`): pane numbers can overlap, so non-default servers prefix the socket name.
+sock="default"; [ -n "$TMUX" ] && sock="$(basename "${TMUX%%,*}")"
+case "$sock" in *[!A-Za-z0-9._-]*|"") exit 0 ;; esac
+[ "$sock" != "default" ] && pane="${sock}__${pane}"
+
+dir="${XDG_STATE_HOME:-$HOME/.local/state}/tmux-island"
+mkdir -p "$dir" && chmod 700 "$dir"   # private: agent messages are nobody else's business
 
 if [ "$state" = "end" ]; then rm -f "$dir/$pane.json"; exit 0; fi
 
 if [ ! -t 0 ] && command -v jq >/dev/null 2>&1; then
   msg=$(jq -r '.message // empty' 2>/dev/null)
 fi
-# Claude Code envoie aussi un Notification « waiting for your input » après 60 s d'inactivité :
-# ce n'est pas une demande de validation, on garde l'état « done ».
+# Claude Code also sends a Notification "waiting for your input" after 60 s of inactivity:
+# that is not a permission request, so we keep the "done" state.
 if [ "$state" = "waiting" ] && printf '%s' "$msg" | grep -qi "waiting for your input"; then exit 0; fi
 
 tmp="$dir/.$pane.$$"

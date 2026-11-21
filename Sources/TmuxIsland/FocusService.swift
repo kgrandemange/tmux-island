@@ -1,18 +1,18 @@
 import AppKit
 import Foundation
 
-/// Amène l'utilisateur sur le bon pane tmux ET sur la bonne fenêtre/onglet du terminal.
+/// Brings the user to the right tmux pane AND the right terminal window/tab.
 enum FocusService {
     static func jump(to pane: Pane) {
         DispatchQueue.global(qos: .userInitiated).async {
             let clients = TmuxService.listClients(server: pane.server)
             TmuxService.run(["select-window", "-t", "=\(pane.session):\(pane.windowIndex)"], server: pane.server)
             TmuxService.run(["select-pane", "-t", pane.tmuxID], server: pane.server)
-            // Client déjà affiché sur cette session en priorité (inutile de déplacer un autre terminal), sinon le plus récent.
+            // Prefer the client already showing this session (no need to move another terminal), else the most recent one.
             let client = clients.filter { $0.session == pane.session }.max(by: { $0.activity < $1.activity })
                 ?? clients.max(by: { $0.activity < $1.activity })
             guard let client else {
-                // Session détachée : on ouvre un terminal qui s'y attache.
+                // Detached session: open a terminal that attaches to it.
                 TerminalLauncher.attach(session: pane.session, server: pane.server)
                 return
             }
@@ -27,8 +27,8 @@ enum FocusService {
         DispatchQueue.global().async { TmuxService.sendKeys(pane, keys: ["Enter"]) }
     }
 
-    /// Choisit une option du menu de validation. Selon la version de l'agent, le chiffre valide tout de suite
-    /// ou ne fait que déplacer la sélection : si le menu est toujours affiché juste après, on valide avec Entrée.
+    /// Picks an option of the permission menu. Depending on the agent's version, the digit either confirms right away
+    /// or only moves the selection: if the menu is still displayed right after, confirm with Enter.
     static func choose(_ option: PermissionOption, on pane: Pane) {
         DispatchQueue.global().async { chooseSync(option, on: pane) }
     }
@@ -68,8 +68,8 @@ enum FocusService {
         guard let bundleID else { return }
         UserDefaults.standard.set(bundleID, forKey: "lastTerminalBundle")
 
-        // Sélection du bon onglet quand le terminal l'expose.
-        if let tty = client?.tty {
+        // Select the right tab when the terminal exposes it.
+        if let tty = client?.tty, TerminalLauncher.isSafeTTY(tty) {
             switch bundleID {
             case "com.github.wez.wezterm": focusWezTermPane(tty: tty)
             case "com.googlecode.iterm2": runAppleScript(iTermScript(tty: tty))
@@ -77,7 +77,7 @@ enum FocusService {
             default: break
             }
         }
-        // Une app « non active » ne peut pas se mettre devant via activate() : `open -b` est fiable.
+        // An app that is not active cannot bring itself forward with activate(): `open -b` is reliable.
         Shell.run("/usr/bin/open", ["-b", bundleID])
     }
 
@@ -99,7 +99,7 @@ enum FocusService {
           repeat with w in windows
             repeat with t in tabs of w
               repeat with s in sessions of t
-                if tty of s is "\(tty)" then
+                if tty of s is "\(TerminalLauncher.appleScriptEscape(tty))" then
                   select w
                   tell w to select t
                   select s
@@ -116,7 +116,7 @@ enum FocusService {
         tell application "Terminal"
           repeat with w in windows
             repeat with t in tabs of w
-              if tty of t is "\(tty)" then
+              if tty of t is "\(TerminalLauncher.appleScriptEscape(tty))" then
                 set selected of t to true
                 set index of w to 1
               end if

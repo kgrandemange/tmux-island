@@ -1,0 +1,40 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead? A screenshot or a short screen recording helps a lot.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: TmuxIsland version
+      description: Menu bar icon › the version is in the release you downloaded (or `brew info --cask tmuxisland`).
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac model
+      placeholder: macOS 15.1, MacBook Pro M3 (with notch)
+    validations:
+      required: true
+  - type: input
+    id: tmux
+    attributes:
+      label: tmux version and terminal
+      placeholder: tmux 3.5a, WezTerm
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: AI agent involved (if any)
+      placeholder: Claude Code 2.1, Codex CLI
+  - type: markdown
+    attributes:
+      value: "Please do not paste anything confidential (project names, prompts, tokens) from your terminal."

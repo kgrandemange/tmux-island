@@ -1,6 +1,6 @@
 import Foundation
 
-/// Mémoire d'un agent entre deux relevés.
+/// An agent's memory between two refreshes.
 struct Track: Equatable {
     var state: AgentState = .idle
     var since: Date = Date()
@@ -8,10 +8,10 @@ struct Track: Equatable {
     var doneAcked = false
 }
 
-/// Tout ce qu'on sait d'un agent à un instant donné.
+/// Everything known about an agent at a given moment.
 struct Signals {
     var hook: HookEvent?
-    /// Champ `status` du fichier de session Claude Code (`busy` / `idle`) : source la plus fiable.
+    /// `status` field of the Claude Code session file (`busy` / `idle` / `shell`): the most reliable source.
     var sessionStatus: String?
     var sessionStatusAt: Date?
     var screenWorking = false
@@ -21,14 +21,14 @@ struct Signals {
     var now = Date()
 }
 
-/// Machine à états d'un agent (fonction pure, testée dans `Tests/`).
+/// An agent's state machine (a pure function, tested in `Tests/`).
 enum StateResolver {
     static func resolve(old: Track, signals s: Signals) -> Track {
         var tr = old
         var new: AgentState
 
         if let status = s.sessionStatus?.lowercased() {
-            // Un hook « waiting » plus récent que le dernier changement de statut = demande de validation en cours.
+            // A "waiting" hook newer than the last status change = a permission request in progress.
             let hookWaiting = s.hook?.state == "waiting"
                 && (s.sessionStatusAt.map { s.hook!.ts > $0.timeIntervalSince1970 } ?? true)
             let statusWaiting = status.contains("wait") || status.contains("permission") || status.contains("input")
@@ -37,11 +37,11 @@ enum StateResolver {
             } else if ["busy", "running", "working"].contains(status) {
                 new = .working
             } else if status == "shell" || status.contains("background") {
-                // Tour fini, mais des shells / sous-agents tournent encore : ni « en cours », ni « terminé »
-                // (pas d'alerte). L'alerte viendra si l'agent se réveille, travaille puis termine.
+                // Turn over, but shells / sub-agents are still running: neither "running" nor "done"
+                // (no alert). The alert comes if the agent wakes up, works, then finishes.
                 new = .background
             } else if s.screenInterrupted {
-                // L'utilisateur a interrompu l'agent (Esc) : rien à signaler.
+                // The user interrupted the agent (Esc): nothing to report.
                 new = .idle
                 tr.doneAcked = true
             } else if old.state == .working || old.state == .waiting {
@@ -57,7 +57,7 @@ enum StateResolver {
             switch h.state {
             case "waiting": new = .waiting
             case "working":
-                // Un Esc (interruption) ne déclenche pas de hook Stop : on recoupe avec l'écran.
+                // An Esc (interruption) does not fire a Stop hook: cross-check with the screen.
                 new = s.screenWaiting ? .waiting : ((s.screenWorking || age < 6) ? .working : .idle)
             case "done":
                 new = (tr.ackedHookTS == h.ts) ? .idle : (s.screenWorking ? .working : .done)
@@ -71,7 +71,7 @@ enum StateResolver {
             else { new = .idle }
         }
 
-        // L'utilisateur regarde déjà ce pane : on acquitte automatiquement le « terminé ».
+        // The user is already looking at this pane: automatically acknowledge the "done".
         if s.userHere && new == .done {
             new = .idle
             tr.doneAcked = true

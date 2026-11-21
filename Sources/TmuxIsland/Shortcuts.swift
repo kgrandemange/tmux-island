@@ -2,7 +2,7 @@ import AppKit
 import Carbon
 import Combine
 
-/// Raccourci clavier global (masques de modificateurs Carbon : pas de permission d'accessibilité requise).
+/// Global keyboard shortcut (Carbon modifier masks: no accessibility permission required).
 struct Shortcut: Codable, Equatable {
     var keyCode: UInt32
     var modifiers: UInt32
@@ -25,7 +25,7 @@ struct Shortcut: Codable, Equatable {
         return m
     }
 
-    /// Un raccourci global doit contenir au moins ⌃, ⌥ ou ⌘ (sinon il volerait la frappe normale).
+    /// A global shortcut must include at least ⌃, ⌥ or ⌘ (otherwise it would steal normal typing).
     var isValidGlobal: Bool { modifiers & UInt32(controlKey | optionKey | cmdKey) != 0 }
 
     static let keyNames: [UInt32: String] = [
@@ -78,7 +78,7 @@ final class ShortcutStore: ObservableObject {
 
     func shortcut(_ a: ShortcutAction) -> Shortcut { shortcuts[a] ?? a.defaultShortcut }
 
-    /// Refuse un raccourci sans modificateur ou déjà utilisé par une autre action ; renvoie le motif du refus.
+    /// Rejects a shortcut with no modifier or already used by another action; returns the reason for the refusal.
     @discardableResult
     func set(_ s: Shortcut, for a: ShortcutAction) -> String? {
         guard s.isValidGlobal else { return "Ajoute au moins ⌃, ⌥ ou ⌘." }
