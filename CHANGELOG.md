@@ -15,11 +15,17 @@ First stable release, and the source code is now open under the MIT license.
 - A smoother open/close animation: the island morphs open with a soft bounce, and closes faster and calmer.
 - A demo environment (`scripts/demo`) and a presentation video built from fictional data.
 
+### Security
+- Security review before opening the code. Hardened: out-of-range process ids and malformed Claude session files can no
+  longer crash the app; session ids are validated before building transcript paths; tty names are validated and escaped
+  before reaching AppleScript; the `--demo-server` name cannot escape tmux's socket directory; only sockets owned by
+  you are used; the state directory is private (0700); the hook script validates every input it writes; the hook
+  installer quotes paths and keeps the permissions of `settings.json`; the website has a content security policy.
+
 ### Changed
+- Code comments are in English, large files were split and dead code removed (no behavior change).
 - The Homebrew cask now downloads from this repository's releases; the website is served from `docs/` of this repository.
 
-### Security
-- See the security review notes in the release pull request.
 
 ## [0.1.2] - 2026-11-21
 - Smoother open/close animation.
