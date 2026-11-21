@@ -10,16 +10,17 @@
 </p>
 
 <p align="center">
-  <a href="https://kgrandemange.github.io/tmux-island/"><b>Website</b></a>
+  <a href="https://kgrandemange.github.io/tmux-island/"><b>Website</b></a> ·
+  <a href="https://github.com/kgrandemange/tmux-island/releases/latest"><b>Download</b></a>
 </p>
 
 <p align="center">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple">
   <img alt="tmux 3.x" src="https://img.shields.io/badge/tmux-3.x-1bb91f">
   <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI%20%2B%20AppKit-F05138?logo=swift&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-43%20passing-brightgreen">
-  <img alt="License" src="https://img.shields.io/badge/license-freeware%20(not%20open%20source)-blue">
-  <img alt="Status" src="https://img.shields.io/badge/status-beta%200.1.0-orange">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-60%20passing-brightgreen">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue">
+  <img alt="Status" src="https://img.shields.io/badge/status-1.0-brightgreen">
 </p>
 
 <p align="center">
@@ -111,30 +112,31 @@ To verify the download: `shasum -a 256 TmuxIsland.zip` must match the checksum p
 - **Apple Silicon only.** The app is built for arm64 (M1 and later). Supporting Intel would need a universal build; it
   isn't planned for now.
 
-### From source (maintainer)
+### From source
 
-TmuxIsland is not open source; the source repository is private. For the maintainer:
+TmuxIsland is open source (MIT). It started closed, but an app that reads your terminals and sends keystrokes to
+your agents should be auditable, so the code is public. Requirements: macOS 14+, the Xcode command line tools
+(Swift 5.9+) and tmux.
 
 ```bash
+git clone https://github.com/kgrandemange/tmux-island
+cd tmux-island
 ./scripts/install.sh            # builds, installs into ~/Applications and launches
 ./scripts/install.sh --login    # same + launch automatically at login
+swift test                      # unit and integration tests (tmux on a private socket)
 ```
 
 TmuxIsland is a menu bar agent: no Dock icon. The menu of its icon gives access to the island,
 **Settings…** (`⌘,`), focus mode and launch at login.
 
-<details>
-<summary><b>Publishing a release (maintainer)</b></summary>
+### Trust and verification
 
-```bash
-./scripts/package.sh            # build/release/TmuxIsland.zip + TmuxIsland.zip.sha256
-```
+- No networking code at all, and the app is not sandboxed: read [SECURITY.md](SECURITY.md) for what it reads and does.
+- Releases are built from the tagged source by [GitHub Actions](.github/workflows/release.yml), together with a
+  SHA-256 checksum.
+- Built with the help of Claude Code; every change goes through the test suite and a review.
 
-The archive is arm64 only, stripped of symbols (function names are no longer readable in the binary) and ad-hoc signed.
-`package.sh` refuses to build if the binary contains a personal path. Upload the zip and the checksum to a GitHub
-release of the public `tmux-island-site` repository (tag `vX.Y.Z`), then bump `version` and `sha256` in the Homebrew
-cask of `kgrandemange/homebrew-tap`.
-</details>
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Hooks (optional)
 
@@ -225,5 +227,4 @@ recomputed reliably from the transcripts.
 
 ## License
 
-Free to use, **not open source**: see [LICENSE](LICENSE). Free to use; modification and redistribution are
-forbidden without permission.
+[MIT](LICENSE) © 2026 Kevin Grandemange.
