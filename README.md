@@ -49,7 +49,7 @@ TmuxIsland lives around your Mac's notch (or as a pill at the top of the screen)
 
 ## Keyboard first, like tmux
 
-You never need the mouse. Global shortcuts (configurable in **Settings…**) work from any app, and once the island is
+You can reach any agent without the mouse. Global shortcuts (configurable in **Settings…**) work from any app, and once the island is
 open every agent has a number:
 
 | Shortcut | Action |
