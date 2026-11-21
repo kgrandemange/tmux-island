@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://kgrandemange.github.io/tmux-island-site/"><b>Website</b></a>
+  <a href="https://kgrandemange.github.io/tmux-island/"><b>Website</b></a>
 </p>
 
 <p align="center">
@@ -95,13 +95,13 @@ Update with `brew upgrade --cask tmuxisland`.
 
 ### Manual download
 
-1. Download [`TmuxIsland.zip`](https://github.com/kgrandemange/tmux-island-site/releases/latest/download/TmuxIsland.zip) and unzip it.
+1. Download [`TmuxIsland.zip`](https://github.com/kgrandemange/tmux-island/releases/latest/download/TmuxIsland.zip) and unzip it.
 2. Drag **TmuxIsland.app** into Applications.
 3. **First launch only**: right-click the app › **Open** › **Open**. On macOS 15 or later, if the app is blocked:
    System Settings › Privacy & Security › **Open Anyway**.
 
 To verify the download: `shasum -a 256 TmuxIsland.zip` must match the checksum published with the
-[release](https://github.com/kgrandemange/tmux-island-site/releases).
+[release](https://github.com/kgrandemange/tmux-island/releases).
 
 ### Why the first-launch warning, and why Apple Silicon only?
 
