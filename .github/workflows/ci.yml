@@ -13,7 +13,7 @@ jobs:
     # Apple Silicon runner: the app targets arm64 only.
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Toolchain
         run: swift --version
       - name: tmux (used by the integration tests)
