@@ -22,6 +22,12 @@ See `scripts/demo/SHOOTING.md`. Handy for screenshots and for testing without re
 Other debug flags: `TmuxIsland --snapshot out.png` renders the island with your sessions, `--demo-images dir` renders the
 documentation images, `--animtest dir` records frames of a real open/close.
 
+To check that clicking an agent brings the right terminal window or tab forward, run
+`scripts/check-terminal-focus.sh terminal` (Terminal.app) or `scripts/check-terminal-focus.sh iterm` (iTerm2).
+It uses a throwaway tmux server and only touches the windows it opens; it runs the real jump code through
+`--demo-server NAME --jump-session SESSION`. Other terminals still need a check (see the table in the README and
+issue #14); adding one means adding its few AppleScript/CLI lines to the script.
+
 ## Project layout
 
 | Path | What it is |
