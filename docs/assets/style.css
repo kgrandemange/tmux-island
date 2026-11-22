@@ -177,7 +177,7 @@ h2 { text-wrap: balance; font-size: clamp(2rem, 4.6vw, 3.3rem); line-height: 1.0
 
 /* Galerie */
 .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 48px; align-items: start; }
-.shots figure { margin: 0; padding: 14px; } .shots img { border-radius: 14px; width: 100%; }
+.shots figure { margin: 0; padding: 14px; } .shots img { border-radius: 14px; width: 100%; height: auto; }
 .shots figcaption { color: var(--muted); font-size: .92rem; padding: 14px 6px 4px; } .shots figcaption b { color: var(--text); }
 
 /* Étapes */
