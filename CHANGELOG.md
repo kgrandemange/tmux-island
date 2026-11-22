@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `scripts/check-terminal-focus.sh`: checks that a click brings the right window (and tab, on iTerm2) to the front.
+  Verified on iTerm2 and Terminal.app; the README now has a terminal compatibility table.
+- `--jump-session` debug flag (with `--demo-server`) that runs the real jump code.
+
 ## [1.1.1] - 2026-11-21
 
 ### Fixed

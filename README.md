@@ -63,8 +63,9 @@ open every agent has a number:
 
 TmuxIsland doesn't hook into any terminal: it reads **tmux itself**. Everything it knows comes from
 `tmux list-panes`, `capture-pane` and `list-clients`, and everything it does goes through `select-window`,
-`select-pane`, `switch-client` and `send-keys`. The result: it works with **any terminal** (WezTerm, Ghostty,
-iTerm2, kitty, Alacritty, Terminal.app…), whether your sessions are local, long-lived or detached.
+`select-pane`, `switch-client` and `send-keys`. The result: the tmux side works the same in **any terminal**, whether
+your sessions are local, long-lived or detached. Bringing the right *window or tab* to the front is the one part that
+depends on the terminal, so here is what has actually been checked.
 
 | What happens | On the tmux side |
 |---|---|
@@ -74,6 +75,27 @@ iTerm2, kitty, Alacritty, Terminal.app…), whether your sessions are local, lon
 | Approve a permission, reply | `send-keys` into the agent's pane |
 | Peek on hover | `capture-pane` (the last 10 real lines) |
 | Several tmux servers (`-L`, `-S`) | every socket is discovered and followed |
+
+### Terminal compatibility
+
+When you click an agent, the app brings the terminal forward and selects the right window or tab.
+
+| Terminal | Status | What was checked |
+|---|---|---|
+| **iTerm2** | ✅ Tested, works | right window and right tab (iTerm2 3.7.9) |
+| **Terminal.app** (Apple) | ✅ Tested, works | right window; tabs not checked |
+| **WezTerm** | ✅ Tested, works | right pane/tab (checked by hand) |
+| Ghostty | 🟡 Not tested yet | the app comes forward, the pane is selected in tmux |
+| kitty | 🟡 Not tested yet | same |
+| Alacritty | 🟡 Not tested yet | same |
+| Warp | 🟡 Not tested yet | same |
+| VS Code (integrated terminal) | 🟡 Not tested yet | same |
+| *(none)* | ❌ Not working | no terminal is known to fail so far |
+
+✅ tested and working · 🟡 not tested yet (tmux always works; only the window/tab selection is unverified) ·
+❌ known not to work. Using one of the untested terminals? A report, good or bad, is very welcome: see
+[issue #14](https://github.com/kgrandemange/tmux-island/issues/14). To check a terminal yourself:
+`scripts/check-terminal-focus.sh terminal` or `iterm` (details in [CONTRIBUTING](CONTRIBUTING.md)).
 
 ## Features
 
@@ -216,7 +238,7 @@ Claude Code transcripts (for the context gauge) and the state files in `~/.claud
 ## Development
 
 ```bash
-swift test                                   # 43 tests: state machine, screen, approval menus, terminals
+swift test                                   # 74 tests: state machine, screen, approval menus, terminals
 .build/release/TmuxIsland --snapshot out.png         # renders the island with your real sessions
 .build/release/TmuxIsland --demo-images docs/assets  # renders the documentation images (fictional data)
 ```
@@ -237,8 +259,9 @@ real files, so you can record without exposing real sessions.
 
 ## FAQ
 
-**Does it work with my terminal?** Yes, since everything goes through tmux. Bringing the right *tab* to the front is
-verified with WezTerm; for other terminals the app is brought forward and the right pane is selected in tmux.
+**Does it work with my terminal?** The tmux side works with any terminal. Bringing the right window or tab to the front
+is verified on iTerm2, Terminal.app and WezTerm; for the others the app is brought forward and the right pane is
+selected in tmux. See the [compatibility table](#terminal-compatibility).
 
 **What about a Mac without a notch?** The island becomes a pill centered at the top of the screen.
 

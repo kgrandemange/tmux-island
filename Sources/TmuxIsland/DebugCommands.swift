@@ -9,6 +9,7 @@ enum DebugCommands {
     static func handleIfRequested() {
         renderDemoImages()
         renderSnapshot()
+        jumpToSession()
         handleLoginOptions()
     }
 
@@ -105,6 +106,23 @@ enum DebugCommands {
                 print("snapshot \(img.size)")
             }
         }
+        exit(0)
+    }
+    }
+
+    // MARK: - --jump-session <name> (with --demo-server NAME)
+
+    /// Runs the real "click an agent" path (`FocusService.jump`) on the first pane of a session of the demo
+    /// server, then exits. Used by `scripts/check-terminal-focus.sh` to check which terminal window comes forward.
+    private static func jumpToSession() {
+    let args = CommandLine.arguments
+    if let i = args.firstIndex(of: "--jump-session"), i + 1 < args.count {
+        guard let socket = DemoMode.socketPath else { print("--jump-session needs --demo-server NAME"); exit(2) }
+        guard let pane = TmuxService.listPanes(server: socket).first(where: { $0.session == args[i + 1] }) else {
+            print("no pane in session \(args[i + 1])"); exit(1)
+        }
+        FocusService.jump(to: pane)
+        RunLoop.current.run(until: Date().addingTimeInterval(2.5))  // jump runs on a background queue
         exit(0)
     }
     }
