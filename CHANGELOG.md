@@ -5,6 +5,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- A dot that went from idle (grey) to working stayed still until the island was hovered. The animation now restarts
+  whenever the agent's state changes, and the pulse speed follows the state.
+
 ### Added
 - `scripts/check-terminal-focus.sh`: checks that a click brings the right window (and tab, on iTerm2) to the front.
   Verified on iTerm2 and Terminal.app; the README now has a terminal compatibility table.

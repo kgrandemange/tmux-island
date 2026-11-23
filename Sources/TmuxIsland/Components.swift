@@ -99,7 +99,6 @@ struct PulsingDot: View {
     }
 }
 
-/// Dot of the compact wing: breathes while the agent works, beats harder when action is needed.
 /// Hollow ring that breathes slowly: "shells are running in the background", without the urgency of a solid dot.
 struct RingDot: View {
     let color: Color
@@ -114,16 +113,24 @@ struct RingDot: View {
 
 struct AgentDot: View {
     let state: AgentState
-    @State private var on = false
     var body: some View {
         if state == .background {
             RingDot(color: state.color)
         } else {
-            solid
+            // `.id(state)` rebuilds the dot when the state changes. The animation only starts in `onAppear`, so a dot
+            // that appeared as "idle" (still) and then turned "working" would otherwise stay frozen until it was
+            // rebuilt (for instance by hovering the island). A rebuild also applies the new pulse speed.
+            SolidDot(state: state).id(state)
         }
     }
+}
 
-    private var solid: some View {
+/// Dot of the compact wing: breathes while the agent works, beats harder when action is needed.
+private struct SolidDot: View {
+    let state: AgentState
+    @State private var on = false
+
+    var body: some View {
         Circle().fill(state.color).frame(width: 7, height: 7)
             .scaleEffect(animated ? (on ? 1.25 : 0.75) : 1)
             .opacity(state == .working ? (on ? 1 : 0.5) : 1)
