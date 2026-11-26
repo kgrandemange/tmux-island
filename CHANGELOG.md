@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-11-26
+
+### Fixed
+- Closing the island with `Esc` (or `⌃⌥Space`) now gives the keyboard back to the window you were in, so you can type
+  right away without clicking it again.
+
 ## [1.1.2] - 2026-11-26
 
 ### Fixed

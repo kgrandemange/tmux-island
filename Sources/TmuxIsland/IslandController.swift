@@ -81,7 +81,7 @@ final class IslandController: NSObject {
         let host = NSHostingView(rootView: IslandView(store: store, model: model))
         host.sizingOptions = []
         panel.contentView = host
-        model.requestKey = { [weak self] in self?.panel.makeKey() }
+        model.requestKey = { [weak self] in self?.takeKey() }
         model.onToggleFocus = { [weak self] in self?.toggleFocus() }
         model.onTapCompact = { [weak self] in
             guard let self else { return }
@@ -137,8 +137,9 @@ final class IslandController: NSObject {
         }.store(in: &bag)
     }
 
-    func setExpanded(_ value: Bool) {
+    func setExpanded(_ value: Bool, restoreFocus restore: Bool = true) {
         guard model.expanded != value else { return }
+        if !value && restore { restoreFocus() }
         if !value { model.resetHover() }
         if value { model.toast = nil }
         // Soft opening with a slight bounce; faster, calmer closing with no bounce.
@@ -172,8 +173,29 @@ final class IslandController: NSObject {
         } else {
             pinned = true
             setExpanded(true)
-            panel.makeKey()
+            takeKey()
         }
+    }
+
+    /// App that was frontmost when the island took the keyboard, so Esc can give the focus back to it.
+    private var appBeforeKey: NSRunningApplication?
+
+    private func takeKey() {
+        if !panel.isKeyWindow {
+            let front = NSWorkspace.shared.frontmostApplication
+            appBeforeKey = front?.processIdentifier == ProcessInfo.processInfo.processIdentifier ? nil : front
+        }
+        panel.makeKey()
+    }
+
+    /// Gives the keyboard back to the window the user was in before the island took it.
+    private func restoreFocus() {
+        defer { appBeforeKey = nil }
+        guard panel.isKeyWindow else { return }
+        // Ordering the panel out hands the key status back to the previous window; then bring it back on screen.
+        panel.orderOut(nil)
+        panel.orderFrontRegardless()
+        appBeforeKey?.activate()
     }
 
     func toggleFocus() {
@@ -217,12 +239,12 @@ final class IslandController: NSObject {
         store.acknowledge(agent.id)
         FocusService.jump(to: agent.pane)
         pinned = false
-        setExpanded(false)
+        setExpanded(false, restoreFocus: false)
     }
 
     func jumpToNextAttention() {
         if let a = store.nextAttention() { jump(to: a) }
-        else if FocusService.focusLastTerminal() { pinned = false; setExpanded(false) }
+        else if FocusService.focusLastTerminal() { pinned = false; setExpanded(false, restoreFocus: false) }
         else { toggle() }
     }
 
