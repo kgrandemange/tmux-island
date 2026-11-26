@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows
   whenever the agent's state changes, and the pulse speed follows the state.
 
 ### Added
+- `⌃⌥J` with no agent to handle now brings back the last terminal you were in, instead of opening the island.
 - `scripts/check-terminal-focus.sh`: checks that a click brings the right window (and tab, on iTerm2) to the front.
   Verified on iTerm2 and Terminal.app; the README now has a terminal compatibility table.
 - `--jump-session` debug flag (with `--demo-server`) that runs the real jump code.

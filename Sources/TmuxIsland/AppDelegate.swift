@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let settings = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        FocusService.startTrackingTerminals()
         controller = IslandController(store: store)
         controller.model.onJump = { [weak self] agent in self?.controller.jump(to: agent) }
         controller.model.onJumpPane = { [weak self] pane in
