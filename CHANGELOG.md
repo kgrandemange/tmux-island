@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-26
+
 ### Fixed
 - A dot that went from idle (grey) to working stayed still until the island was hovered. The animation now restarts
   whenever the agent's state changes, and the pulse speed follows the state.
