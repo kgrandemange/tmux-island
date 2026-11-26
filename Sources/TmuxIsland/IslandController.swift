@@ -221,7 +221,9 @@ final class IslandController: NSObject {
     }
 
     func jumpToNextAttention() {
-        if let a = store.nextAttention() { jump(to: a) } else { toggle() }
+        if let a = store.nextAttention() { jump(to: a) }
+        else if FocusService.focusLastTerminal() { pinned = false; setExpanded(false) }
+        else { toggle() }
     }
 
     // MARK: - Souris & clavier

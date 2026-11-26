@@ -55,7 +55,7 @@ open every agent has a number:
 | Shortcut | Action |
 |---|---|
 | `⌃⌥Space` | Open / close the island |
-| `⌃⌥J` | Jump to the next agent to handle (oldest "waiting" or "done") |
+| `⌃⌥J` | Jump to the next agent to handle (oldest "waiting" or "done"), or back to your last terminal if there is none |
 | `1`–`9` | Go to agent *n* (number row or keypad; on AZERTY no Shift needed) |
 | `J` / `F` / `Esc` | Next to handle / focus mode / close |
 
@@ -111,7 +111,7 @@ When you click an agent, the app brings the terminal forward and selects the rig
 - **Pane preview on hover**: the last lines of the agent, without leaving what you're doing.
 - **Context gauge** (Claude Code): how full each session's context window is.
 - **History of finishes**: find the agent you missed, even after dismissing it.
-- **Next agent to handle** (`⌃⌥J`): jumps straight to the oldest "done" or "waiting" agent.
+- **Next agent to handle** (`⌃⌥J`): jumps straight to the oldest "done" or "waiting" agent. With nothing to handle, it brings back the last terminal you were in.
 - **Focus mode** (`⌃⌥F`): no sound, no toast; only the dots remain.
 - **Follow the active screen**: the island and its alerts come to where your cursor is (multi-display).
 - **Auto-acknowledge**: a "done" disappears when you are already looking at the pane.

@@ -49,6 +49,30 @@ enum FocusService {
 
     // MARK: - Terminal
 
+    static let knownTerminals = ["com.github.wez.wezterm", "com.mitchellh.ghostty", "com.googlecode.iterm2",
+                                 "net.kovidgoyal.kitty", "org.alacritty", "com.apple.Terminal", "dev.warp.Warp-Stable"]
+
+    /// Remembers the last terminal app that was frontmost, even when the user switched to it without the island.
+    static func startTrackingTerminals() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            if let id = app?.bundleIdentifier, knownTerminals.contains(id) {
+                UserDefaults.standard.set(id, forKey: "lastTerminalBundle")
+            }
+        }
+    }
+
+    /// Brings back the last terminal the user was in. Returns false when there is none to bring back.
+    @discardableResult
+    static func focusLastTerminal() -> Bool {
+        guard let id = UserDefaults.standard.string(forKey: "lastTerminalBundle"),
+              !NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty else { return false }
+        Shell.run("/usr/bin/open", ["-b", id])
+        return true
+    }
+
     private static func activateTerminal(for client: TmuxClient?) {
         var bundleID: String?
         if let client {
@@ -61,9 +85,7 @@ enum FocusService {
             }
         }
         if bundleID == nil {
-            let known = ["com.github.wez.wezterm", "com.mitchellh.ghostty", "com.googlecode.iterm2",
-                         "net.kovidgoyal.kitty", "org.alacritty", "com.apple.Terminal", "dev.warp.Warp-Stable"]
-            bundleID = known.first { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }
+            bundleID = knownTerminals.first { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }
         }
         guard let bundleID else { return }
         UserDefaults.standard.set(bundleID, forKey: "lastTerminalBundle")
